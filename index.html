@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — UC Santa Cruz</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f4}
+:root{
+  --navy:#003C6C;--navy-dark:#002D52;--navy-light:#E8EFF6;
+  --gold:#FDB515;--gold-light:#FEF3D6;
+  --ok:#2E7D32;--ok-bg:#E8F5E9;--warn:#B45309;--warn-bg:#FEF3C7;--bad:#B91C1C;--bad-bg:#FEE2E2;
+}
+.app{display:flex;flex-direction:column;height:100vh;background:#f4f4f4;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:10px;padding:0 20px;height:56px;background:var(--navy);flex-shrink:0}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-mark{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark i{color:var(--navy);font-size:18px}
+.logo-name{font-size:16px;font-weight:600;color:#fff;letter-spacing:-.01em}
+.logo-tag{font-size:11px;color:rgba(255,255,255,.55);margin-top:1px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.top-pill{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);font-size:12px;color:rgba(255,255,255,.85);cursor:pointer;transition:background .15s}
+.top-pill:hover{background:rgba(255,255,255,.18)}
+.alert-badge{background:var(--gold);color:var(--navy);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:600}
+.user-circle{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;flex-shrink:0}
+.body{display:flex;flex:1;overflow:hidden}
+.sidebar{width:230px;background:#fff;border-right:0.5px solid #e0e0e0;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-top{padding:14px 16px 8px;border-bottom:0.5px solid #eee}
+.sb-org{font-size:12px;color:#888;margin-bottom:2px}
+.sb-campus{font-size:14px;font-weight:600;color:var(--navy)}
+.sb-section{padding:7px 0 3px}
+.sb-label{font-size:10px;font-weight:600;color:#aaa;letter-spacing:.07em;text-transform:uppercase;padding:5px 16px 3px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;color:#555;cursor:pointer;border-left:3px solid transparent;transition:all .13s}
+.nav-item:hover{background:#f7f9fc;color:var(--navy)}
+.nav-item.active{color:var(--navy);border-left-color:var(--gold);background:var(--navy-light);font-weight:600}
+.nav-item i{font-size:16px;width:20px;flex-shrink:0}
+.nav-count{margin-left:auto;background:var(--navy);color:#fff;border-radius:9px;padding:1px 7px;font-size:10px}
+.nav-count.warn{background:var(--bad)}
+.sb-divider{height:0.5px;background:#eee;margin:4px 0}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.view{display:none;flex:1;flex-direction:column;overflow:hidden}
+.view.active{display:flex}
+
+.map-toolbar{display:flex;align-items:center;gap:10px;padding:10px 18px;background:#fff;border-bottom:0.5px solid #e0e0e0;flex-shrink:0;flex-wrap:wrap}
+.toolbar-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.toolbar-title{font-size:14px;font-weight:600;color:var(--navy);white-space:nowrap}
+.search-wrap{position:relative;flex:1;max-width:340px}
+.search-input-row{display:flex;align-items:center;gap:7px;border:1px solid #ccc;border-radius:9px;padding:7px 12px;background:#fff;transition:border-color .15s}
+.search-input-row:focus-within{border-color:var(--navy)}
+.search-input-row i{color:#aaa;font-size:15px;flex-shrink:0}
+.search-input-row input{border:none;outline:none;font-size:13px;color:#333;width:100%;background:transparent}
+.search-input-row input::placeholder{color:#aaa}
+.search-clear{cursor:pointer;color:#aaa;font-size:14px;flex-shrink:0;display:none}
+.search-clear.show{display:block}
+.search-dropdown{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#fff;border:0.5px solid #ddd;border-radius:9px;overflow:hidden;z-index:50;display:none;max-height:340px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.search-dropdown.open{display:block}
+.sd-group-label{font-size:10px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.06em;padding:7px 14px 4px;background:#f9f9f9;border-bottom:0.5px solid #eee}
+.sd-item{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;transition:background .1s;border-bottom:0.5px solid #f5f5f5}
+.sd-item:last-child{border-bottom:none}
+.sd-item:hover,.sd-item.focused{background:#f0f5fb}
+.sd-item-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sd-item-icon i{font-size:14px}
+.sd-main{flex:1;min-width:0}
+.sd-name{font-size:13px;font-weight:600;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sd-sub{font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sd-status{flex-shrink:0;font-size:10px;font-weight:600;padding:3px 7px;border-radius:7px}
+.sd-empty{padding:18px 14px;font-size:13px;color:#aaa;text-align:center}
+.filter-row{display:flex;gap:6px}
+.fpill{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:0.5px solid #ccc;color:#666;background:#fff;transition:all .13s;display:flex;align-items:center;gap:5px}
+.fpill i{font-size:13px}
+.fpill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.fpill.f-fak.active{background:#2E7D32}
+.fpill.f-stb.active{background:#B45309}
+.fpill.f-ec.active{background:#6B21A8}
+
+.map-area{flex:1;position:relative;overflow:hidden;background:#eef2f5}
+.map-svg{width:100%;height:100%}
+.bldg{cursor:pointer}
+.bldg rect.b-hover{opacity:0;transition:opacity .15s}
+.bldg:hover rect.b-hover{opacity:1}
+.bldg.dimmed{opacity:0.25}
+.bldg.highlighted{opacity:1}
+
+.site-panel{position:absolute;right:0;top:0;bottom:0;width:340px;background:#fff;border-left:0.5px solid #e0e0e0;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease;z-index:20;box-shadow:-4px 0 16px rgba(0,0,0,.06)}
+.site-panel.open{transform:translateX(0)}
+.sp-head{padding:16px 18px;border-bottom:0.5px solid #eee;display:flex;align-items:flex-start;gap:10px}
+.sp-head-icon{width:38px;height:38px;background:var(--navy-light);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-head-icon i{color:var(--navy);font-size:18px}
+.sp-name{font-size:15px;font-weight:600;color:var(--navy);line-height:1.3}
+.sp-addr{font-size:11px;color:#888;margin-top:2px}
+.sp-close{margin-left:auto;cursor:pointer;color:#aaa;padding:3px;font-size:18px}
+.sp-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.sp-sect-label{font-size:10px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.eq-card{background:#f7f9fc;border-radius:10px;padding:12px 14px;border:0.5px solid #e4eaf0;cursor:pointer;transition:border-color .13s}
+.eq-card:hover{border-color:var(--navy)}
+.eq-card.highlight-eq{border:1.5px solid var(--gold);background:#fffbee}
+.eq-card-top{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.eq-type-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.eq-card-name{font-size:13px;font-weight:600;color:var(--navy)}
+.eq-card-loc{font-size:11px;color:#888}
+.eq-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:8px}
+.chip-id{background:var(--navy-light);color:var(--navy)}
+.eq-detail{display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid #eee}
+.eq-detail.open{display:block}
+.detail-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:0.5px solid #f0f0f0}
+.detail-row:last-of-type{border-bottom:none}
+.detail-label{color:#888}
+.detail-val{color:var(--navy);font-weight:600}
+.insp-list{margin-top:7px;display:flex;flex-direction:column;gap:0}
+.insp-row{display:flex;gap:9px;padding:6px 0;border-bottom:0.5px solid #f0f0f0}
+.insp-row:last-child{border-bottom:none}
+.insp-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.insp-date{font-size:12px;font-weight:600;color:#333}
+.insp-by{font-size:11px;color:#888}
+.log-btn{margin-top:10px;width:100%;padding:8px;background:var(--navy);color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600}
+.log-btn:hover{background:var(--navy-dark)}
+.dash-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat-card{background:#fff;border-radius:10px;padding:16px 18px;border:0.5px solid #e0e0e0}
+.stat-lbl{font-size:12px;color:#888;margin-bottom:4px}
+.stat-num{font-size:28px;font-weight:600}
+.stat-num.ok{color:var(--ok)}.stat-num.warn{color:var(--warn)}.stat-num.bad{color:var(--bad)}.stat-num.navy{color:var(--navy)}
+.stat-sub{font-size:11px;color:#aaa;margin-top:2px}
+.dash-card{background:#fff;border-radius:12px;border:0.5px solid #e0e0e0;padding:16px 18px}
+.dash-card h3{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.dash-card h3 i{font-size:16px}
+.alert-row2{display:flex;gap:12px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;align-items:flex-start}
+.alert-row2:last-child{border-bottom:none}
+.alert-ico{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-ico i{font-size:16px}
+.alert-t{font-size:13px;font-weight:600;color:#222}
+.alert-s{font-size:11px;color:#888;margin-top:1px}
+.alert-age{font-size:10px;color:#aaa;margin-top:3px}
+.sched-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px}
+.sched-row:last-child{border-bottom:none}
+.sched-site{flex:1;font-weight:600;color:#222}
+.sched-insp{color:#888;font-size:11px}
+.sched-due{font-size:11px;font-weight:600}
+.fs-hint{position:fixed;bottom:14px;right:18px;background:rgba(0,60,108,.85);color:#fff;font-size:11px;padding:6px 12px;border-radius:20px;z-index:100;cursor:pointer;transition:opacity .3s}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="logo-wrap">
+      <div class="logo-mark"><i class="ti ti-heartbeat" aria-hidden="true"></i></div>
+      <div>
+        <div class="logo-name">SafetyTrack</div>
+        <div class="logo-tag">UC Santa Cruz · Safety Equipment</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="top-pill"><i class="ti ti-bell" style="font-size:14px" aria-hidden="true"></i><span class="alert-badge">3</span></div>
+      <div class="top-pill" onclick="showView('dashboard')"><i class="ti ti-layout-dashboard" style="font-size:14px" aria-hidden="true"></i> Dashboard</div>
+      <div class="user-circle">JR</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="sidebar">
+      <div class="sb-top">
+        <div class="sb-org">University of California</div>
+        <div class="sb-campus">Santa Cruz Campus</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Views</div>
+        <div class="nav-item active" onclick="showView('map')"><i class="ti ti-map-2" aria-hidden="true"></i> Campus map</div>
+        <div class="nav-item" onclick="showView('dashboard')"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-section">
+        <div class="sb-label">Equipment</div>
+        <div class="nav-item" onclick="showView('map')"><i class="ti ti-heartbeat" aria-hidden="true"></i> AED units <span class="nav-count">18</span></div>
+        <div class="nav-item" onclick="showView('map')"><i class="ti ti-first-aid-kit" aria-hidden="true"></i> First aid kits <span class="nav-count">24</span></div>
+        <div class="nav-item" onclick="showView('map')"><i class="ti ti-bandage" aria-hidden="true"></i> Stop the bleed <span class="nav-count">12</span></div>
+        <div class="nav-item" onclick="showView('map')"><i class="ti ti-armchair" aria-hidden="true"></i> Evac chairs <span class="nav-count">9</span></div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-section">
+        <div class="sb-label">Manage</div>
+        <div class="nav-item" onclick="showView('dashboard')"><i class="ti ti-building" aria-hidden="true"></i> Sites <span class="nav-count">12</span></div>
+        <div class="nav-item" onclick="showView('dashboard')"><i class="ti ti-calendar-event" aria-hidden="true"></i> Schedule</div>
+        <div class="nav-item" onclick="showView('dashboard')"><i class="ti ti-users" aria-hidden="true"></i> Accounts</div>
+        <div class="nav-item" onclick="showView('dashboard')"><i class="ti ti-report" aria-hidden="true"></i> Reports</div>
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-section">
+        <div class="sb-label">Alerts</div>
+        <div class="nav-item" onclick="showView('dashboard')"><i class="ti ti-alert-triangle" style="color:#B91C1C" aria-hidden="true"></i> Active alerts <span class="nav-count warn">3</span></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="view active" id="view-map">
+        <div class="map-toolbar">
+          <div class="toolbar-left">
+            <i class="ti ti-map-2" style="color:var(--navy);font-size:16px;flex-shrink:0" aria-hidden="true"></i>
+            <span class="toolbar-title">Campus map</span>
+            <div class="search-wrap" id="searchWrap">
+              <div class="search-input-row">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="text" id="mapSearch" placeholder="Search buildings, AED IDs, serial numbers…" autocomplete="off" oninput="onSearch(this.value)" onfocus="openDropdown()" onkeydown="onKey(event)"/>
+                <i class="ti ti-x search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search"></i>
+              </div>
+              <div class="search-dropdown" id="searchDropdown"></div>
+            </div>
+          </div>
+          <div class="filter-row">
+            <div class="fpill f-aed active" onclick="toggleFilter(this)"><i class="ti ti-heartbeat" aria-hidden="true"></i> AED</div>
+            <div class="fpill f-fak active" onclick="toggleFilter(this)"><i class="ti ti-first-aid-kit" aria-hidden="true"></i> First aid</div>
+            <div class="fpill f-stb active" onclick="toggleFilter(this)"><i class="ti ti-bandage" aria-hidden="true"></i> Stop bleed</div>
+            <div class="fpill f-ec active" onclick="toggleFilter(this)"><i class="ti ti-armchair" aria-hidden="true"></i> Evac</div>
+          </div>
+        </div>
+
+        <div class="map-area" onclick="handleMapClick(event)">
+          <svg class="map-svg" id="mapsvg" viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+                <path d="M28 0L0 0 0 28" fill="none" stroke="#dde3ea" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="760" height="500" fill="#eef2f5"/>
+            <rect width="760" height="500" fill="url(#grid)"/>
+            <path d="M0 290Q190 278 380 270Q570 262 760 258" fill="none" stroke="#d0d8e0" stroke-width="16" stroke-linecap="round"/>
+            <path d="M0 290Q190 278 380 270Q570 262 760 258" fill="none" stroke="#e8edf2" stroke-width="14" stroke-linecap="round"/>
+            <path d="M350 0Q358 135 365 270" fill="none" stroke="#d0d8e0" stroke-width="11"/>
+            <path d="M350 0Q358 135 365 270" fill="none" stroke="#e8edf2" stroke-width="9"/>
+            <path d="M0 155Q175 162 350 167" fill="none" stroke="#d0d8e0" stroke-width="9"/>
+            <path d="M510 500Q516 375 522 270" fill="none" stroke="#d0d8e0" stroke-width="10"/>
+            <text x="130" y="283" font-family="sans-serif" font-size="8.5" fill="#8fa0b0" text-anchor="middle">McLaughlin Dr</text>
+            <text x="346" y="90" font-family="sans-serif" font-size="8" fill="#8fa0b0" text-anchor="middle" transform="rotate(-90,346,90)">Hagar Dr</text>
+            <ellipse cx="195" cy="390" rx="85" ry="55" fill="#d4e8cc" opacity="0.5"/>
+            <text x="195" y="393" font-family="sans-serif" font-size="8.5" fill="#4a7a38" text-anchor="middle" opacity="0.8">East Meadow</text>
+
+            <g id="b-hahn" class="bldg" data-site="hahn" onclick="openSite('hahn')">
+              <rect x="55" y="55" width="125" height="78" rx="6" fill="#fff" stroke="#003C6C" stroke-width="1.2"/>
+              <rect x="55" y="55" width="125" height="18" rx="6" fill="#003C6C"/>
+              <rect x="55" y="64" width="125" height="9" fill="#003C6C"/>
+              <text x="117" y="68" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle">Hahn Student Services</text>
+              <text x="117" y="88" font-family="sans-serif" font-size="8" fill="#003C6C" text-anchor="middle">2 AEDs · 1 First Aid</text>
+              <text x="117" y="101" font-family="sans-serif" font-size="8" fill="#B91C1C" text-anchor="middle" font-weight="600">Inspection overdue</text>
+              <text x="117" y="122" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">Inspector: M. Torres</text>
+              <rect class="b-hover" x="55" y="55" width="125" height="78" rx="6" fill="#FDB515" opacity="0" stroke="none"/>
+            </g>
+            <circle cx="55" cy="55" r="8" fill="#B91C1C" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>
+            <text x="55" y="58" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle" style="pointer-events:none">!</text>
+
+            <g id="b-mchenry" class="bldg" data-site="mchenry" onclick="openSite('mchenry')">
+              <rect x="232" y="72" width="118" height="75" rx="6" fill="#fff" stroke="#003C6C" stroke-width="1.2"/>
+              <rect x="232" y="72" width="118" height="18" rx="6" fill="#003C6C"/>
+              <rect x="232" y="81" width="118" height="9" fill="#003C6C"/>
+              <text x="291" y="85" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle">McHenry Library</text>
+              <text x="291" y="103" font-family="sans-serif" font-size="8" fill="#003C6C" text-anchor="middle">3 AEDs · 2 First Aid</text>
+              <text x="291" y="116" font-family="sans-serif" font-size="8" fill="#B45309" text-anchor="middle" font-weight="600">Battery expiring</text>
+              <text x="291" y="136" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">Inspector: K. Patel</text>
+              <rect class="b-hover" x="232" y="72" width="118" height="75" rx="6" fill="#FDB515" opacity="0" stroke="none"/>
+            </g>
+            <circle cx="232" cy="72" r="8" fill="#FDB515" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>
+
+            <g id="b-baskin" class="bldg" data-site="baskin" onclick="openSite('baskin')">
+              <rect x="442" y="50" width="122" height="72" rx="6" fill="#fff" stroke="#003C6C" stroke-width="1.2"/>
+              <rect x="442" y="50" width="122" height="18" rx="6" fill="#003C6C"/>
+              <rect x="442" y="59" width="122" height="9" fill="#003C6C"/>
+              <text x="503" y="63" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle">Baskin Engineering</text>
+              <text x="503" y="83" font-family="sans-serif" font-size="8" fill="#003C6C" text-anchor="middle">2 AEDs · 2 First Aid</text>
+              <text x="503" y="96" font-family="sans-serif" font-size="8" fill="#2E7D32" text-anchor="middle" font-weight="600">All compliant</text>
+              <text x="503" y="113" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">Inspector: J. Ramirez</text>
+              <rect class="b-hover" x="442" y="50" width="122" height="72" rx="6" fill="#FDB515" opacity="0" stroke="none"/>
+            </g>
+            <circle cx="442" cy="50" r="8" fill="#2E7D32" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>
+            <text x="442" y="53" font-family="sans-serif" font-size="9" fill="#fff" text-anchor="middle" style="pointer-events:none">✓</text>
+
+            <g id="b-kresge" class="bldg" data-site="kresge" onclick="openSite('kresge')">
+              <rect x="610" y="68" width="114" height="72" rx="6" fill="#fff" stroke="#003C6C" stroke-width="1.2"/>
+              <rect x="610" y="68" width="114" height="18" rx="6" fill="#003C6C"/>
+              <rect x="610" y="77" width="114" height="9" fill="#003C6C"/>
+              <text x="667" y="81" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle">Kresge College</text>
+              <text x="667" y="101" font-family="sans-serif" font-size="8" fill="#003C6C" text-anchor="middle">2 AEDs · 1 Evac Chair</text>
+              <text x="667" y="114" font-family="sans-serif" font-size="8" fill="#B45309" text-anchor="middle" font-weight="600">Pads expiring</text>
+              <text x="667" y="131" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">Inspector: L. Chen</text>
+              <rect class="b-hover" x="610" y="68" width="114" height="72" rx="6" fill="#FDB515" opacity="0" stroke="none"/>
+            </g>
+            <circle cx="610" cy="68" r="8" fill="#FDB515" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>
+
+            <g id="b-stevenson" class="bldg" data-site="stevenson" onclick="openSite('stevenson')">
+              <rect x="68" y="318" width="118" height="70" rx="6" fill="#fff" stroke="#003C6C" stroke-width="1.2"/>
+              <rect x="68" y="318" width="118" height="18" rx="6" fill="#003C6C"/>
+              <rect x="68" y="327" width="118" height="9" fill="#003C6C"/>
+              <text x="127" y="331" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle">Stevenson College</text>
+              <text x="127" y="351" font-family="sans-serif" font-size="8" fill="#003C6C" text-anchor="middle">1 AED · 1 Stop Bleed</text>
+              <text x="127" y="364" font-family="sans-serif" font-size="8" fill="#2E7D32" text-anchor="middle" font-weight="600">All compliant</text>
+              <text x="127" y="379" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">Inspector: J. Ramirez</text>
+              <rect class="b-hover" x="68" y="318" width="118" height="70" rx="6" fill="#FDB515" opacity="0" stroke="none"/>
+            </g>
+            <circle cx="68" cy="318" r="8" fill="#2E7D32" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>
+            <text x="68" y="321" font-family="sans-serif" font-size="9" fill="#fff" text-anchor="middle" style="pointer-events:none">✓</text>
+
+            <g id="b-sel" class="bldg" data-site="sel" onclick="openSite('sel')">
+              <rect x="378" y="305" width="128" height="72" rx="6" fill="#fff" stroke="#003C6C" stroke-width="1.2"/>
+              <rect x="378" y="305" width="128" height="18" rx="6" fill="#003C6C"/>
+              <rect x="378" y="314" width="128" height="9" fill="#003C6C"/>
+              <text x="442" y="318" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle">S&amp;E Library</text>
+              <text x="442" y="338" font-family="sans-serif" font-size="8" fill="#003C6C" text-anchor="middle">2 AEDs · 2 First Aid</text>
+              <text x="442" y="351" font-family="sans-serif" font-size="8" fill="#2E7D32" text-anchor="middle" font-weight="600">All compliant</text>
+              <text x="442" y="368" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">Inspector: K. Patel</text>
+              <rect class="b-hover" x="378" y="305" width="128" height="72" rx="6" fill="#FDB515" opacity="0" stroke="none"/>
+            </g>
+            <circle cx="378" cy="305" r="8" fill="#2E7D32" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>
+            <text x="378" y="308" font-family="sans-serif" font-size="9" fill="#fff" text-anchor="middle" style="pointer-events:none">✓</text>
+
+            <g id="b-c910" class="bldg" data-site="c910" onclick="openSite('c910')">
+              <rect x="598" y="315" width="126" height="70" rx="6" fill="#fff" stroke="#003C6C" stroke-width="1.2"/>
+              <rect x="598" y="315" width="126" height="18" rx="6" fill="#003C6C"/>
+              <rect x="598" y="324" width="126" height="9" fill="#003C6C"/>
+              <text x="661" y="328" font-family="sans-serif" font-size="9" font-weight="600" fill="#fff" text-anchor="middle">College 9 &amp; 10</text>
+              <text x="661" y="348" font-family="sans-serif" font-size="8" fill="#003C6C" text-anchor="middle">2 AEDs · 1 Evac Chair</text>
+              <text x="661" y="361" font-family="sans-serif" font-size="8" fill="#2E7D32" text-anchor="middle" font-weight="600">All compliant</text>
+              <text x="661" y="378" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">Inspector: L. Chen</text>
+              <rect class="b-hover" x="598" y="315" width="126" height="70" rx="6" fill="#FDB515" opacity="0" stroke="none"/>
+            </g>
+            <circle cx="598" cy="315" r="8" fill="#2E7D32" stroke="#fff" stroke-width="1.5" style="pointer-events:none"/>
+            <text x="598" y="318" font-family="sans-serif" font-size="9" fill="#fff" text-anchor="middle" style="pointer-events:none">✓</text>
+
+            <rect x="12" y="415" width="172" height="76" rx="7" fill="#fff" stroke="#ddd" stroke-width="0.5"/>
+            <text x="22" y="430" font-family="sans-serif" font-size="9" font-weight="600" fill="#003C6C">Legend</text>
+            <circle cx="24" cy="445" r="5" fill="#2E7D32"/><text x="34" y="449" font-family="sans-serif" font-size="9" fill="#555">Compliant</text>
+            <circle cx="88" cy="445" r="5" fill="#FDB515"/><text x="98" y="449" font-family="sans-serif" font-size="9" fill="#555">Expiring</text>
+            <circle cx="24" cy="463" r="5" fill="#B91C1C"/><text x="34" y="467" font-family="sans-serif" font-size="9" fill="#555">Inspection due</text>
+            <text x="380" y="490" font-family="sans-serif" font-size="8.5" fill="#8fa0b0" text-anchor="middle">Click any building to view equipment and inspection history</text>
+          </svg>
+
+          <div class="site-panel" id="sitePanel">
+            <div class="sp-head">
+              <div class="sp-head-icon"><i class="ti ti-building" aria-hidden="true"></i></div>
+              <div style="flex:1">
+                <div class="sp-name" id="spName"></div>
+                <div class="sp-addr" id="spAddr"></div>
+              </div>
+              <div class="sp-close" onclick="closePanel()"><i class="ti ti-x" aria-hidden="true"></i></div>
+            </div>
+            <div class="sp-body" id="spBody"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-dashboard">
+        <div class="map-toolbar">
+          <i class="ti ti-layout-dashboard" style="color:var(--navy);font-size:16px" aria-hidden="true"></i>
+          <span class="toolbar-title">Dashboard</span>
+        </div>
+        <div class="dash-body">
+          <div class="stat-row">
+            <div class="stat-card"><div class="stat-lbl">Total equipment</div><div class="stat-num navy">63</div><div class="stat-sub">across 12 sites</div></div>
+            <div class="stat-card"><div class="stat-lbl">Compliant</div><div class="stat-num ok">58</div><div class="stat-sub">92% pass rate</div></div>
+            <div class="stat-card"><div class="stat-lbl">Expiring soon</div><div class="stat-num warn">3</div><div class="stat-sub">within 60 days</div></div>
+            <div class="stat-card"><div class="stat-lbl">Inspections due</div><div class="stat-num bad">2</div><div class="stat-sub">overdue 48h+</div></div>
+          </div>
+          <div class="dash-card">
+            <h3><i class="ti ti-alert-triangle" style="color:#B45309" aria-hidden="true"></i> Active alerts</h3>
+            <div class="alert-row2"><div class="alert-ico" style="background:#FEE2E2"><i class="ti ti-clock-exclamation" style="color:#B91C1C" aria-hidden="true"></i></div><div><div class="alert-t">Inspection overdue — Hahn Student Services</div><div class="alert-s">AED-004, AED-005 · M. Torres</div><div class="alert-age">72 hours overdue</div></div></div>
+            <div class="alert-row2"><div class="alert-ico" style="background:#FEF3C7"><i class="ti ti-calendar-x" style="color:#B45309" aria-hidden="true"></i></div><div><div class="alert-t">Battery expiring — McHenry Library AED-007</div><div class="alert-s">Expires Aug 12 · Lot BT-2291</div><div class="alert-age">48 days</div></div></div>
+            <div class="alert-row2"><div class="alert-ico" style="background:#FEF3C7"><i class="ti ti-calendar-x" style="color:#B45309" aria-hidden="true"></i></div><div><div class="alert-t">Pads expiring — Kresge College AED-012</div><div class="alert-s">Expires Sep 3 · Lot PD-8847</div><div class="alert-age">70 days</div></div></div>
+          </div>
+          <div class="dash-card">
+            <h3><i class="ti ti-calendar-check" style="color:var(--navy)" aria-hidden="true"></i> Upcoming inspections</h3>
+            <div class="sched-row"><i class="ti ti-building" style="color:#aaa;font-size:14px" aria-hidden="true"></i><span class="sched-site">Science &amp; Engineering Library</span><span class="sched-insp">K. Patel</span><span class="sched-due" style="color:#B45309">Jun 27</span></div>
+            <div class="sched-row"><i class="ti ti-building" style="color:#aaa;font-size:14px" aria-hidden="true"></i><span class="sched-site">Stevenson College</span><span class="sched-insp">J. Ramirez</span><span class="sched-due" style="color:#2E7D32">Jul 1</span></div>
+            <div class="sched-row"><i class="ti ti-building" style="color:#aaa;font-size:14px" aria-hidden="true"></i><span class="sched-site">College 9 &amp; 10</span><span class="sched-insp">L. Chen</span><span class="sched-due" style="color:#2E7D32">Jul 3</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fs-hint" id="fsHint" onclick="toggleFullscreen()">Press F11 or click here for fullscreen</div>
+
+<script>
+const sites={
+  hahn:{name:'Hahn Student Services',addr:'1156 High St, Santa Cruz',inspector:'M. Torres',equipment:[
+    {id:'AED-004',type:'aed',brand:'Philips',model:'HeartStart FRx',serial:'A16F-44221',loc:'1st Floor Lobby',bat:'2025-11-01',pads:'2025-09-15',status:'due',inspections:[{date:'Apr 18 2025',by:'M. Torres',pass:true,notes:'Device present, indicator OK'},{date:'Mar 17 2025',by:'M. Torres',pass:true,notes:'All checks passed'}]},
+    {id:'AED-005',type:'aed',brand:'ZOLL',model:'AED Plus',serial:'ZL-88321A',loc:'2nd Floor Break Room',bat:'2026-02-01',pads:'2026-01-10',status:'due',inspections:[{date:'Apr 18 2025',by:'M. Torres',pass:true,notes:'Device present, OK'}]},
+    {id:'FAK-002',type:'fak',brand:'First Aid Only',model:'All-Purpose Kit',serial:'FA-20011',loc:'Main Office',status:'due',inspections:[{date:'Apr 18 2025',by:'M. Torres',pass:true,notes:'Supplies restocked'}]},
+  ]},
+  mchenry:{name:'McHenry Library',addr:'1156 High St (Library)',inspector:'K. Patel',equipment:[
+    {id:'AED-007',type:'aed',brand:'Cardiac Science',model:'Powerheart G5',serial:'CS-90012B',loc:'Main Entrance',bat:'2025-08-12',pads:'2026-03-01',status:'warn',inspections:[{date:'May 20 2025',by:'K. Patel',pass:false,notes:'Battery expiring — flagged'},{date:'Apr 22 2025',by:'K. Patel',pass:true,notes:'All checks passed'}]},
+    {id:'AED-008',type:'aed',brand:'Physio-Control',model:'LIFEPAK CR2',serial:'LC-77001Z',loc:'2nd Floor Study',bat:'2026-06-01',pads:'2026-05-01',status:'ok',inspections:[{date:'May 20 2025',by:'K. Patel',pass:true,notes:'All clear'}]},
+    {id:'AED-009',type:'aed',brand:'Philips',model:'HeartStart HS1',serial:'A22K-10034',loc:'Lower Level',bat:'2026-10-01',pads:'2026-08-01',status:'ok',inspections:[{date:'May 20 2025',by:'K. Patel',pass:true,notes:'OK'}]},
+    {id:'FAK-005',type:'fak',brand:'Medique',model:'25-Person Kit',serial:'MQ-5533',loc:'Reference Desk',status:'ok',inspections:[{date:'May 20 2025',by:'K. Patel',pass:true,notes:'Fully stocked'}]},
+  ]},
+  baskin:{name:'Baskin Engineering',addr:'1156 High St (SOE)',inspector:'J. Ramirez',equipment:[
+    {id:'AED-001',type:'aed',brand:'Physio-Control',model:'LIFEPAK CR2',serial:'LC-44110X',loc:'Building 1 Lobby',bat:'2026-05-01',pads:'2026-04-01',status:'ok',inspections:[{date:'Jun 2 2025',by:'J. Ramirez',pass:true,notes:'All clear'}]},
+    {id:'AED-002',type:'aed',brand:'Philips',model:'HeartStart FRx',serial:'A16F-99201',loc:'Engineering 2 Hall',bat:'2026-07-01',pads:'2026-06-15',status:'ok',inspections:[{date:'Jun 2 2025',by:'J. Ramirez',pass:true,notes:'Pads verified'}]},
+    {id:'FAK-001',type:'fak',brand:'Medique',model:'25-Person Kit',serial:'MQ-1100',loc:'Main Lab',status:'ok',inspections:[{date:'Jun 2 2025',by:'J. Ramirez',pass:true,notes:'Fully stocked'}]},
+  ]},
+  kresge:{name:'Kresge College',addr:'Kresge College, UCSC',inspector:'L. Chen',equipment:[
+    {id:'AED-012',type:'aed',brand:'ZOLL',model:'AED 3',serial:'ZL-30211C',loc:'College Office',bat:'2026-04-01',pads:'2025-09-03',status:'warn',inspections:[{date:'May 28 2025',by:'L. Chen',pass:false,notes:'Pads expiring — flagged'},{date:'Apr 28 2025',by:'L. Chen',pass:true,notes:'All checks passed'}]},
+    {id:'AED-013',type:'aed',brand:'Cardiac Science',model:'Powerheart G3',serial:'CS-44012D',loc:'Dining Hall',bat:'2026-09-01',pads:'2026-08-01',status:'ok',inspections:[{date:'May 28 2025',by:'L. Chen',pass:true,notes:'All clear'}]},
+    {id:'EC-002',type:'ec',brand:'Evacusafe',model:'Exodus 3',serial:'EV-30012',loc:'Building C Stairwell',status:'ok',inspections:[{date:'May 28 2025',by:'L. Chen',pass:true,notes:'Chair functional'}]},
+  ]},
+  stevenson:{name:'Stevenson College',addr:'Stevenson College, UCSC',inspector:'J. Ramirez',equipment:[
+    {id:'AED-010',type:'aed',brand:'Physio-Control',model:'LIFEPAK CR2',serial:'LC-55912W',loc:'College Office',bat:'2026-08-01',pads:'2026-07-15',status:'ok',inspections:[{date:'Jun 5 2025',by:'J. Ramirez',pass:true,notes:'All clear'}]},
+    {id:'STB-003',type:'stb',brand:'North American Rescue',model:'STOP THE BLEED Kit',serial:'NAR-4421',loc:'Main Corridor',status:'ok',inspections:[{date:'Jun 5 2025',by:'J. Ramirez',pass:true,notes:'Kit complete, sealed'}]},
+  ]},
+  sel:{name:'Science & Engineering Library',addr:'S&E Library, UCSC',inspector:'K. Patel',equipment:[
+    {id:'AED-015',type:'aed',brand:'Philips',model:'HeartStart HS1',serial:'A22K-33301',loc:'Main Floor',bat:'2026-11-01',pads:'2026-10-01',status:'ok',inspections:[{date:'Jun 10 2025',by:'K. Patel',pass:true,notes:'All clear'}]},
+    {id:'AED-016',type:'aed',brand:'ZOLL',model:'AED Plus',serial:'ZL-11209B',loc:'Study Corridor',bat:'2026-12-01',pads:'2026-11-01',status:'ok',inspections:[{date:'Jun 10 2025',by:'K. Patel',pass:true,notes:'OK'}]},
+  ]},
+  c910:{name:'College 9 & 10',addr:'College 9/10, UCSC',inspector:'L. Chen',equipment:[
+    {id:'AED-017',type:'aed',brand:'Cardiac Science',model:'Powerheart G5',serial:'CS-90777P',loc:'College 9 Hub',bat:'2026-09-01',pads:'2026-08-01',status:'ok',inspections:[{date:'Jun 8 2025',by:'L. Chen',pass:true,notes:'All clear'}]},
+    {id:'AED-018',type:'aed',brand:'Philips',model:'HeartStart FRx',serial:'A16F-20091',loc:'College 10 Lobby',bat:'2026-10-01',pads:'2026-09-01',status:'ok',inspections:[{date:'Jun 8 2025',by:'L. Chen',pass:true,notes:'OK'}]},
+    {id:'EC-004',type:'ec',brand:'Evac+Chair',model:'300H',serial:'EC-10044',loc:'Main Stairwell',status:'ok',inspections:[{date:'Jun 8 2025',by:'L. Chen',pass:true,notes:'Chair in position'}]},
+  ]}
+};
+
+const typeConfig={
+  aed:{label:'AED',icon:'ti-heartbeat',color:'#003C6C',bg:'#E8EFF6'},
+  fak:{label:'First aid kit',icon:'ti-first-aid-kit',color:'#2E7D32',bg:'#E8F5E9'},
+  stb:{label:'Stop the bleed',icon:'ti-bandage',color:'#B45309',bg:'#FEF3C7'},
+  ec:{label:'Evac chair',icon:'ti-armchair',color:'#6B21A8',bg:'#F3E8FF'}
+};
+const statusConfig={
+  ok:{label:'Compliant',bg:'#E8F5E9',color:'#2E7D32'},
+  warn:{label:'Expiring',bg:'#FEF3C7',color:'#B45309'},
+  due:{label:'Insp. due',bg:'#FEE2E2',color:'#B91C1C'}
+};
+
+let focusIdx=-1;
+let currentResults=[];
+
+function buildIndex(){
+  const idx=[];
+  Object.entries(sites).forEach(([siteKey,s])=>{
+    idx.push({type:'site',siteKey,name:s.name,sub:s.addr+' · '+s.equipment.length+' items',status:worstStatus(s),searchText:(s.name+' '+s.addr+' '+s.inspector).toLowerCase()});
+    s.equipment.forEach(eq=>{
+      idx.push({type:'eq',siteKey,eqId:eq.id,name:eq.brand+' '+eq.model,sub:eq.id+' · '+s.name+' · '+eq.loc,status:eq.status,searchText:(eq.id+' '+eq.brand+' '+eq.model+' '+eq.serial+' '+eq.loc+' '+s.name).toLowerCase()});
+    });
+  });
+  return idx;
+}
+function worstStatus(s){
+  if(s.equipment.some(e=>e.status==='due'))return'due';
+  if(s.equipment.some(e=>e.status==='warn'))return'warn';
+  return'ok';
+}
+const searchIndex=buildIndex();
+
+function onSearch(val){
+  const clear=document.getElementById('searchClear');
+  clear.classList.toggle('show',val.length>0);
+  if(!val.trim()){resetDim();closeDropdown();return;}
+  const q=val.toLowerCase().trim();
+  currentResults=searchIndex.filter(r=>r.searchText.includes(q)).slice(0,12);
+  renderDropdown(currentResults,val);
+  focusIdx=-1;
+}
+function renderDropdown(results,q){
+  const dd=document.getElementById('searchDropdown');
+  if(!results.length){dd.innerHTML='<div class="sd-empty">No results for "'+q+'"</div>';dd.classList.add('open');return;}
+  const sites2=results.filter(r=>r.type==='site');
+  const eqs=results.filter(r=>r.type==='eq');
+  let html='';
+  if(sites2.length){
+    html+='<div class="sd-group-label">Buildings</div>';
+    sites2.forEach(r=>{
+      const sc=statusConfig[r.status];
+      html+=`<div class="sd-item" data-idx="${results.indexOf(r)}" onclick="selectResult(${results.indexOf(r)})">
+        <div class="sd-item-icon" style="background:#E8EFF6"><i class="ti ti-building" style="color:#003C6C" aria-hidden="true"></i></div>
+        <div class="sd-main"><div class="sd-name">${highlight(r.name,q)}</div><div class="sd-sub">${r.sub}</div></div>
+        <span class="sd-status" style="background:${sc.bg};color:${sc.color}">${sc.label}</span>
+      </div>`;
+    });
+  }
+  if(eqs.length){
+    html+='<div class="sd-group-label">Equipment</div>';
+    eqs.forEach(r=>{
+      const tc=typeConfig[r.type]||typeConfig.aed;
+      const sc=statusConfig[r.status];
+      html+=`<div class="sd-item" data-idx="${results.indexOf(r)}" onclick="selectResult(${results.indexOf(r)})">
+        <div class="sd-item-icon" style="background:${tc.bg}"><i class="ti ${tc.icon}" style="color:${tc.color}" aria-hidden="true"></i></div>
+        <div class="sd-main"><div class="sd-name">${highlight(r.name,q)}</div><div class="sd-sub">${highlight(r.sub,q)}</div></div>
+        <span class="sd-status" style="background:${sc.bg};color:${sc.color}">${sc.label}</span>
+      </div>`;
+    });
+  }
+  dd.innerHTML=html;
+  dd.classList.add('open');
+}
+function highlight(text,q){
+  if(!q)return text;
+  const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return text.replace(re,'<mark style="background:#FEF3D6;color:#003C6C;border-radius:2px;padding:0 1px">$1</mark>');
+}
+function selectResult(idx){
+  const r=currentResults[idx];
+  if(!r)return;
+  closeDropdown();
+  document.getElementById('mapSearch').value=r.type==='site'?r.name:r.sub.split(' · ')[0]+' — '+r.name;
+  document.getElementById('searchClear').classList.add('show');
+  dimAllExcept(r.siteKey);
+  openSite(r.siteKey,r.type==='eq'?r.eqId:null);
+}
+function dimAllExcept(siteKey){
+  document.querySelectorAll('.bldg').forEach(b=>{
+    const k=b.getAttribute('data-site');
+    b.classList.toggle('dimmed',k!==siteKey);
+    b.classList.toggle('highlighted',k===siteKey);
+  });
+}
+function resetDim(){document.querySelectorAll('.bldg').forEach(b=>{b.classList.remove('dimmed','highlighted')})}
+function openDropdown(){const val=document.getElementById('mapSearch').value;if(val.trim())renderDropdown(currentResults,val)}
+function closeDropdown(){document.getElementById('searchDropdown').classList.remove('open');focusIdx=-1}
+function clearSearch(){
+  document.getElementById('mapSearch').value='';
+  document.getElementById('searchClear').classList.remove('show');
+  currentResults=[];closeDropdown();resetDim();closePanel();
+}
+function onKey(e){
+  const items=document.querySelectorAll('.sd-item');
+  if(!items.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();focusIdx=Math.min(focusIdx+1,items.length-1);updateFocus(items);}
+  else if(e.key==='ArrowUp'){e.preventDefault();focusIdx=Math.max(focusIdx-1,0);updateFocus(items);}
+  else if(e.key==='Enter'){e.preventDefault();if(focusIdx>=0)selectResult(parseInt(items[focusIdx].getAttribute('data-idx')));}
+  else if(e.key==='Escape'){clearSearch();}
+}
+function updateFocus(items){items.forEach((el,i)=>el.classList.toggle('focused',i===focusIdx));if(items[focusIdx])items[focusIdx].scrollIntoView({block:'nearest'})}
+function handleMapClick(e){if(!e.target.closest('.bldg')&&!e.target.closest('.site-panel')&&!e.target.closest('.search-wrap')){closeDropdown()}}
+document.addEventListener('click',function(e){if(!e.target.closest('#searchWrap'))closeDropdown()});
+
+function showView(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  if(v==='map')document.querySelectorAll('.nav-item')[0].classList.add('active');
+  else if(v==='dashboard')document.querySelectorAll('.nav-item')[1].classList.add('active');
+  closePanel();
+}
+function toggleFilter(el){el.classList.toggle('active')}
+
+function openSite(key,highlightEqId=null){
+  const s=sites[key];
+  if(!s)return;
+  document.getElementById('spName').textContent=s.name;
+  document.getElementById('spAddr').textContent=s.addr+' · Inspector: '+s.inspector;
+  const body=document.getElementById('spBody');
+  body.innerHTML='';
+  const counts={aed:0,fak:0,stb:0,ec:0};
+  s.equipment.forEach(e=>counts[e.type]=(counts[e.type]||0)+1);
+  const sumDiv=document.createElement('div');
+  sumDiv.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px';
+  Object.entries(counts).forEach(([t,n])=>{
+    if(!n)return;
+    const c=typeConfig[t];
+    sumDiv.innerHTML+=`<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:8px;font-size:11px;font-weight:600;background:${c.bg};color:${c.color}"><i class="ti ${c.icon}" style="font-size:12px" aria-hidden="true"></i>${n} ${c.label}</span>`;
+  });
+  body.appendChild(sumDiv);
+  const lbl=document.createElement('div');
+  lbl.className='sp-sect-label';lbl.style.marginTop='10px';
+  lbl.textContent='Equipment ('+s.equipment.length+') — click to expand';
+  body.appendChild(lbl);
+  s.equipment.forEach(eq=>{
+    const tc=typeConfig[eq.type];
+    const sc=statusConfig[eq.status];
+    const isHighlighted=highlightEqId&&eq.id===highlightEqId;
+    const card=document.createElement('div');
+    card.className='eq-card'+(isHighlighted?' highlight-eq':'');
+    card.innerHTML=`<div class="eq-card-top">
+      <div class="eq-type-icon" style="background:${tc.bg}"><i class="ti ${tc.icon}" style="color:${tc.color};font-size:14px" aria-hidden="true"></i></div>
+      <div style="flex:1"><div class="eq-card-name">${eq.brand} ${eq.model}</div><div class="eq-card-loc"><i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i> ${eq.loc}</div></div>
+    </div>
+    <div class="eq-chips">
+      <span class="chip chip-id">${eq.id}</span>
+      <span class="chip" style="background:${sc.bg};color:${sc.color}">${sc.label}</span>
+      ${eq.type==='aed'&&eq.bat?`<span class="chip" style="background:#fafafa;color:#888;font-size:10px">Bat: ${eq.bat}</span>`:''}
+    </div>
+    <div class="eq-detail${isHighlighted?' open':''}" id="det-${eq.id}">
+      ${eq.type==='aed'?`<div class="detail-row"><span class="detail-label">Serial</span><span class="detail-val">${eq.serial}</span></div>
+      <div class="detail-row"><span class="detail-label">Battery exp.</span><span class="detail-val">${eq.bat}</span></div>
+      <div class="detail-row"><span class="detail-label">Pads exp.</span><span class="detail-val">${eq.pads}</span></div>`
+      :`<div class="detail-row"><span class="detail-label">Serial</span><span class="detail-val">${eq.serial}</span></div>`}
+      <div style="font-size:10px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px">Inspection history</div>
+      <div class="insp-list">${eq.inspections.map(ins=>`<div class="insp-row"><div class="insp-dot" style="background:${ins.pass?'#2E7D32':'#B91C1C'}"></div><div><div class="insp-date">${ins.date}</div><div class="insp-by">by ${ins.by} · ${ins.notes}</div></div></div>`).join('')}</div>
+      <button class="log-btn" onclick="event.stopPropagation()"><i class="ti ti-plus" aria-hidden="true"></i> Log new inspection</button>
+    </div>`;
+    card.addEventListener('click',function(){
+      const det=document.getElementById('det-'+eq.id);
+      const was=det.classList.contains('open');
+      document.querySelectorAll('.eq-detail').forEach(d=>d.classList.remove('open'));
+      if(!was)det.classList.add('open');
+    });
+    body.appendChild(card);
+  });
+  document.getElementById('sitePanel').classList.add('open');
+  if(highlightEqId){
+    setTimeout(()=>{
+      const el=document.getElementById('det-'+highlightEqId);
+      if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+    },300);
+  }
+}
+function closePanel(){document.getElementById('sitePanel').classList.remove('open')}
+
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(()=>{});
+  }else{
+    document.exitFullscreen();
+  }
+}
+setTimeout(()=>{
+  const hint=document.getElementById('fsHint');
+  if(hint)hint.style.opacity='0';
+  setTimeout(()=>{if(hint)hint.style.display='none'},300);
+},6000);
+</script>
+</body>
+</html>
