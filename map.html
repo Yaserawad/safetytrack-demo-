@@ -30,7 +30,8 @@
 .building:hover{opacity:.85}
 .building-label{font-size:11px;font-weight:600;fill:#fff;pointer-events:none}
 .building-sub{font-size:8px;fill:rgba(255,255,255,.85);pointer-events:none}
-.building.selected{stroke:var(--gold);stroke-width:3}
+.building-rect{stroke:rgba(0,0,0,.08);stroke-width:1}
+.building.selected .building-rect{stroke:var(--gold);stroke-width:4}
 
 .side-panel{width:300px;flex-shrink:0;background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:16px}
 @media (max-width:900px){.side-panel{width:100%}}
@@ -161,14 +162,49 @@ function renderMain(){
           <span><div class="legend-dot" style="background:#B45309"></div>75-89% compliant</span>
           <span><div class="legend-dot" style="background:#B91C1C"></div>Below 75%</span>
         </div>
-        <svg viewBox="0 0 550 330" style="width:100%;height:auto">
+        <svg viewBox="0 0 550 340" style="width:100%;height:auto">
+          <!-- Campus grounds -->
+          <rect x="0" y="0" width="550" height="340" rx="16" fill="#EAF1E4"></rect>
+
+          <!-- Walkways connecting buildings -->
+          <g stroke="#C9D6C2" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.9">
+            <path d="M 115 75 L 210 65"></path>
+            <path d="M 340 65 L 360 75"></path>
+            <path d="M 115 120 L 115 140"></path>
+            <path d="M 275 100 L 275 120"></path>
+            <path d="M 435 120 L 435 140"></path>
+            <path d="M 275 190 L 275 210"></path>
+            <path d="M 115 220 L 115 240"></path>
+            <path d="M 170 175 L 210 155"></path>
+            <path d="M 170 270 L 210 245"></path>
+          </g>
+
+          <!-- Trees -->
+          <g fill="#9CB88A">
+            <circle cx="185" cy="95" r="9"></circle>
+            <circle cx="330" cy="105" r="9"></circle>
+            <circle cx="500" cy="105" r="9"></circle>
+            <circle cx="185" cy="195" r="9"></circle>
+            <circle cx="500" cy="245" r="9"></circle>
+            <circle cx="20" cy="105" r="9"></circle>
+            <circle cx="20" cy="300" r="9"></circle>
+            <circle cx="470" cy="20" r="9"></circle>
+          </g>
+
+          <!-- Compass -->
+          <g transform="translate(510,300)" opacity="0.55">
+            <circle r="16" fill="none" stroke="#7C8B72" stroke-width="1.5"></circle>
+            <path d="M0,-12 L4,0 L0,4 L-4,0 Z" fill="#7C8B72"></path>
+            <text y="-19" text-anchor="middle" font-size="9" fill="#7C8B72" font-weight="700">N</text>
+          </g>
+
           ${BUILDINGS.map(b=>{
             const pct = Math.round(b.compliant/b.total*100);
             const color = barColor(pct);
             const sel = selectedBuilding===b.id ? 'selected' : '';
             return `
             <g class="building ${sel}" onclick="selectBuilding('${b.id}')">
-              <rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="10" fill="${color}"></rect>
+              <rect class="building-rect" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="10" fill="${color}"></rect>
               <text x="${b.x+10}" y="${b.y+22}" class="building-label">${b.name}</text>
               <text x="${b.x+10}" y="${b.y+38}" class="building-sub">${b.compliant}/${b.total} compliant (${pct}%)</text>
             </g>`;
