@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — Inspection</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+body{background:var(--surface-0)}
+.phone{max-width:480px;margin:0 auto;min-height:100vh;background:var(--surface-0);display:flex;flex-direction:column}
+
+.bar{background:var(--navy);padding:10px 16px 8px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.bar-back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.bar-back i{color:#fff;font-size:16px}
+.bar-title{font-size:14px;font-weight:600;color:#fff;flex:1}
+.bar-sub{font-size:10px;color:rgba(255,255,255,.6);margin-top:1px}
+
+.steps{display:flex;background:var(--navy);padding:0 16px 10px;gap:6px}
+.step-dot{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.25)}
+.step-dot.done{background:var(--gold)}
+.step-dot.active{background:#fff}
+.step-labels{display:flex;justify-content:space-between;padding:0 16px 10px;background:var(--navy)}
+.sl-txt{font-size:9px;color:rgba(255,255,255,.5);flex:1;text-align:center}
+.sl-txt.active{color:#fff;font-weight:600}
+
+.body{padding:16px 16px 100px;display:flex;flex-direction:column;gap:14px;flex:1}
+.card{background:var(--surface-2);border-radius:12px;border:0.5px solid var(--border);overflow:hidden}
+.card-head{padding:12px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-head-icon{width:32px;height:32px;border-radius:8px;background:#E8EFF6;color:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-head-title{font-size:13px;font-weight:600;color:var(--text-primary)}
+.card-head-sub{font-size:11px;color:var(--text-secondary)}
+.card-body{padding:14px}
+
+.eq-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.eq-row:last-child{border-bottom:none}
+.eq-row-label{color:var(--text-secondary)}
+.eq-row-val{font-weight:600}
+
+.check-item{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:0.5px solid var(--border)}
+.check-item:last-child{border-bottom:none}
+.check-q{font-size:13px;font-weight:500}
+.check-opts{display:flex;gap:6px}
+.check-opt{flex:1;text-align:center;padding:8px 6px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;font-weight:600;cursor:pointer;color:var(--text-secondary)}
+.check-opt.pass.selected{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.check-opt.fail.selected{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.check-opt.na.selected{border-color:var(--text-muted);background:var(--surface-1);color:var(--text-secondary)}
+.check-note{margin-top:2px}
+.check-note textarea{width:100%;border:0.5px solid var(--border-strong);border-radius:8px;padding:8px 10px;font-size:12px;font-family:var(--font-sans);resize:vertical;min-height:50px;outline:none}
+.check-note textarea:focus{border-color:var(--bad)}
+.check-photo-row{margin-top:2px}
+.check-photo-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--navy);cursor:pointer;padding:8px 10px;border:1px dashed var(--border-strong);border-radius:8px;width:fit-content}
+.check-photo-btn:hover{background:var(--surface-1)}
+.check-photo-added{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--ok-bg);color:var(--ok);border-radius:8px;padding:7px 10px;font-size:12px;width:fit-content}
+
+.photo-zone{border:1.5px dashed var(--border-strong);border-radius:12px;padding:24px;text-align:center;color:var(--text-muted);cursor:pointer}
+.photo-zone i{font-size:26px;margin-bottom:6px;display:block}
+.photo-zone-txt{font-size:12px}
+.photo-added{display:flex;align-items:center;gap:8px;background:var(--ok-bg);color:var(--ok);border-radius:8px;padding:10px 12px;font-size:12px;margin-top:8px}
+
+.notes-area textarea{width:100%;border:0.5px solid var(--border-strong);border-radius:8px;padding:10px 12px;font-size:13px;font-family:var(--font-sans);resize:vertical;min-height:80px;outline:none}
+.notes-area textarea:focus{border-color:var(--navy)}
+
+.summary-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.summary-stat:last-child{border-bottom:none}
+.summary-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.summary-badge.ok{background:var(--ok-bg);color:var(--ok)}
+.summary-badge.bad{background:var(--bad-bg);color:var(--bad)}
+.summary-badge.muted{background:var(--surface-1);color:var(--text-secondary)}
+
+.fail-alert{display:flex;gap:8px;align-items:flex-start;background:var(--bad-bg);color:#8a1616;font-size:12px;padding:10px 12px;border-radius:8px}
+
+.footer-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface-2);border-top:0.5px solid var(--border);padding:12px 16px;display:flex;gap:10px;max-width:480px;margin:0 auto}
+.nav-btn{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;text-align:center;border:none}
+.nav-btn.back{background:var(--surface-1);color:var(--text-secondary);border:0.5px solid var(--border);flex:0 0 90px}
+.nav-btn.next{background:var(--navy);color:#fff}
+.nav-btn.submit{background:var(--ok);color:#fff}
+.nav-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.done-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:14px}
+.done-icon{width:64px;height:64px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:32px}
+.done-title{font-size:18px;font-weight:700;color:var(--navy)}
+.done-sub{font-size:13px;color:var(--text-secondary);max-width:280px}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+
+<script>
+const STEP_LABELS = ["Equipment","Visual","Function","Notes","Review"];
+let step = 0;
+let submitted = false;
+
+const equipment = {
+  id: "AED-014",
+  type: "AED",
+  site: "McHenry Library",
+  location: "2nd floor, near elevator",
+  lastInspected: "2026-06-08",
+};
+
+let checks = {
+  visual: [
+    { id:"v1", q:"Unit is unobstructed and clearly visible", result:null, note:"", photo:false },
+    { id:"v2", q:"Cabinet/case is undamaged", result:null, note:"", photo:false },
+    { id:"v3", q:"Signage is present and visible", result:null, note:"", photo:false },
+  ],
+  function: [
+    { id:"f1", q:"Status indicator shows ready/green", result:null, note:"", photo:false },
+    { id:"f2", q:"Battery expiration date is valid", result:null, note:"", photo:false },
+    { id:"f3", q:"Pads are within expiration date", result:null, note:"", photo:false },
+  ],
+};
+
+let photoAdded = false;
+let notes = "";
+
+function setCheck(group, id, result){
+  const item = checks[group].find(c=>c.id===id);
+  item.result = result;
+  render();
+}
+function setCheckNote(group, id, val){
+  const item = checks[group].find(c=>c.id===id);
+  item.note = val;
+}
+function toggleCheckPhoto(group, id){
+  const item = checks[group].find(c=>c.id===id);
+  item.photo = !item.photo;
+  render();
+}
+function allAnswered(group){
+  return checks[group].every(c=>c.result!==null);
+}
+function hasFail(){
+  return [...checks.visual, ...checks.function].some(c=>c.result==="fail");
+}
+function canProceed(){
+  if(step===1) return allAnswered("visual");
+  if(step===2) return allAnswered("function");
+  return true;
+}
+
+function goNext(){ if(canProceed() && step<4) step++; render(); }
+function goBack(){ if(step>0) step--; render(); }
+function addPhoto(){ photoAdded = true; render(); }
+function submitInspection(){ submitted = true; render(); }
+
+function renderChecklist(group, title, icon){
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-icon"><i class="ti ${icon}"></i></div>
+      <div>
+        <div class="card-head-title">${title}</div>
+        <div class="card-head-sub">${checks[group].length} items</div>
+      </div>
+    </div>
+    <div class="card-body">
+      ${checks[group].map(c=>`
+        <div class="check-item">
+          <div class="check-q">${c.q}</div>
+          <div class="check-opts">
+            <div class="check-opt pass ${c.result==='pass'?'selected':''}" onclick="setCheck('${group}','${c.id}','pass')"><i class="ti ti-check"></i> Pass</div>
+            <div class="check-opt fail ${c.result==='fail'?'selected':''}" onclick="setCheck('${group}','${c.id}','fail')"><i class="ti ti-x"></i> Fail</div>
+            <div class="check-opt na ${c.result==='na'?'selected':''}" onclick="setCheck('${group}','${c.id}','na')">N/A</div>
+          </div>
+          ${c.result==='fail'?`
+          <div class="check-note">
+            <textarea placeholder="Describe the issue (required for corrective action)" oninput="setCheckNote('${group}','${c.id}',this.value)">${c.note}</textarea>
+          </div>
+          <div class="check-photo-row">
+            ${!c.photo ? `
+            <div class="check-photo-btn" onclick="toggleCheckPhoto('${group}','${c.id}')">
+              <i class="ti ti-camera-plus"></i> Attach photo (optional)
+            </div>` : `
+            <div class="check-photo-added">
+              <span><i class="ti ti-check"></i> Photo attached</span>
+              <i class="ti ti-x" style="cursor:pointer" onclick="toggleCheckPhoto('${group}','${c.id}')"></i>
+            </div>`}
+          </div>`:''}
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+function render(){
+  const app = document.getElementById("app");
+
+  if(submitted){
+    app.innerHTML = `
+      <div class="bar"><div class="bar-title">Inspection submitted</div></div>
+      <div class="done-screen">
+        <div class="done-icon"><i class="ti ti-circle-check"></i></div>
+        <div class="done-title">Inspection logged</div>
+        <div class="done-sub">${equipment.id} at ${equipment.site} has been recorded.
+          ${hasFail() ? "A finding was flagged and a corrective action has been created automatically." : "No issues were found."}
+        </div>
+      </div>`;
+    return;
+  }
+
+  const dots = STEP_LABELS.map((_,i) => `<div class="step-dot ${i<step?'done':i===step?'active':''}"></div>`).join('');
+  const labels = STEP_LABELS.map((l,i) => `<div class="sl-txt ${i===step?'active':''}">${l}</div>`).join('');
+
+  let content = "";
+  if(step===0){
+    content = `
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="ti ti-qrcode"></i></div>
+          <div>
+            <div class="card-head-title">${equipment.id}</div>
+            <div class="card-head-sub">${equipment.type}</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="eq-row"><div class="eq-row-label">Site</div><div class="eq-row-val">${equipment.site}</div></div>
+          <div class="eq-row"><div class="eq-row-label">Location</div><div class="eq-row-val">${equipment.location}</div></div>
+          <div class="eq-row"><div class="eq-row-label">Last inspected</div><div class="eq-row-val">${equipment.lastInspected}</div></div>
+        </div>
+      </div>
+      <div class="fail-alert" style="background:var(--gold-light);color:#7a5a05">
+        <i class="ti ti-info-circle"></i> Confirm this is the correct equipment before starting the inspection.
+      </div>`;
+  } else if(step===1){
+    content = renderChecklist("visual","Visual inspection","ti-eye");
+  } else if(step===2){
+    content = renderChecklist("function","Functional test","ti-bolt");
+  } else if(step===3){
+    content = `
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="ti ti-camera"></i></div>
+          <div class="card-head-title">Overall photo (optional)</div>
+        </div>
+        <div class="card-body">
+          ${!photoAdded ? `
+          <div class="photo-zone" onclick="addPhoto()">
+            <i class="ti ti-camera-plus"></i>
+            <div class="photo-zone-txt">Tap to add a photo</div>
+          </div>` : `
+          <div class="photo-added"><i class="ti ti-check"></i> Photo attached</div>`}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="ti ti-notes"></i></div>
+          <div class="card-head-title">Additional notes</div>
+        </div>
+        <div class="card-body notes-area">
+          <textarea placeholder="Anything else worth noting..." oninput="notes=this.value">${notes}</textarea>
+        </div>
+      </div>`;
+  } else if(step===4){
+    const failed = hasFail();
+    content = `
+      ${failed ? `<div class="fail-alert"><i class="ti ti-alert-triangle"></i> One or more items failed. Submitting will automatically create a corrective action.</div>` : ''}
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="ti ti-clipboard-check"></i></div>
+          <div class="card-head-title">Review summary</div>
+        </div>
+        <div class="card-body">
+          <div class="summary-stat"><div>Equipment</div><div style="font-weight:600">${equipment.id}</div></div>
+          <div class="summary-stat"><div>Site</div><div style="font-weight:600">${equipment.site}</div></div>
+          <div class="summary-stat"><div>Visual inspection</div><div class="summary-badge ${checks.visual.some(c=>c.result==='fail')?'bad':'ok'}">${checks.visual.some(c=>c.result==='fail')?'Issue found':'Passed'}</div></div>
+          <div class="summary-stat"><div>Functional test</div><div class="summary-badge ${checks.function.some(c=>c.result==='fail')?'bad':'ok'}">${checks.function.some(c=>c.result==='fail')?'Issue found':'Passed'}</div></div>
+          <div class="summary-stat"><div>Photos attached</div><div class="summary-badge muted">${[...checks.visual, ...checks.function].filter(c=>c.photo).length + (photoAdded?1:0)}</div></div>
+        </div>
+      </div>`;
+  }
+
+  app.innerHTML = `
+    <div class="bar">
+      <div class="bar-back" onclick="${step===0?'':'goBack()'}"><i class="ti ti-arrow-left"></i></div>
+      <div>
+        <div class="bar-title">Log inspection</div>
+        <div class="bar-sub">${equipment.id} · ${equipment.site}</div>
+      </div>
+    </div>
+    <div class="steps">${dots}</div>
+    <div class="step-labels">${labels}</div>
+    <div class="body">${content}</div>
+    <div class="footer-nav">
+      ${step>0?`<div class="nav-btn back" onclick="goBack()">Back</div>`:''}
+      ${step<4
+        ? `<div class="nav-btn next" onclick="goNext()" ${canProceed()?'':'style="opacity:.5;pointer-events:none"'}>Continue</div>`
+        : `<div class="nav-btn submit" onclick="submitInspection()">Submit inspection</div>`}
+    </div>
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", render);
+</script>
+</body>
+</html>

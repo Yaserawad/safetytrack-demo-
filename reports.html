@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — Reports</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="shared.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+.rep-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.rep-select select{padding:7px 10px;border:0.5px solid var(--border-strong);border-radius:8px;font-size:12px;background:var(--surface-2);color:var(--text-secondary);font-family:var(--font-sans)}
+.export-group{display:flex;gap:8px;margin-left:auto}
+.export-btn{display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--surface-2);color:var(--navy);border:0.5px solid var(--navy);border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.export-btn:hover{background:#F5F8FB}
+.export-btn.filled{background:var(--navy);color:#fff}
+.export-btn.filled:hover{background:var(--navy-dark)}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media (max-width:700px){.stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-lbl{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;color:var(--navy)}
+.stat-val.ok{color:var(--ok)}
+.stat-val.bad{color:var(--bad)}
+.stat-trend{font-size:11px;margin-top:2px}
+.stat-trend.up{color:var(--ok)}
+.stat-trend.down{color:var(--bad)}
+
+.charts-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:14px}
+@media (max-width:900px){.charts-grid{grid-template-columns:1fr}}
+.panel{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:16px}
+.panel h2{font-size:14px;color:var(--navy);margin:0 0 4px}
+.panel-sub{font-size:11px;color:var(--text-secondary);margin-bottom:12px}
+.chart-wrap{position:relative;height:220px}
+
+.site-table{width:100%;border-collapse:collapse}
+.site-table th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-secondary);padding:8px 6px;border-bottom:0.5px solid var(--border)}
+.site-table td{padding:8px 6px;font-size:12px;border-bottom:0.5px solid var(--border)}
+.bar-cell{display:flex;align-items:center;gap:8px}
+.bar-track{flex:1;height:6px;border-radius:4px;background:var(--surface-1);overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.pct{font-size:11px;font-weight:600;width:34px;text-align:right}
+</style>
+</head>
+<body>
+
+<div id="page-content">
+  <div id="repRoot"></div>
+</div>
+
+<script>
+const SITES_DATA = [
+  { site:"McHenry Library", compliant:22, total:26 },
+  { site:"Porter College", compliant:31, total:33 },
+  { site:"Baskin Engineering", compliant:18, total:29 },
+  { site:"Kresge Town Hall", compliant:14, total:15 },
+  { site:"Science Hill Bldg 3", compliant:19, total:24 },
+  { site:"Cowell College", compliant:27, total:28 },
+];
+
+const TREND_MONTHS = ["Feb","Mar","Apr","May","Jun","Jul"];
+const TREND_RATES = [84, 86, 85, 89, 91, 92];
+
+const TYPE_BREAKDOWN = [
+  { type:"AED", count:64 },
+  { type:"Fire Extinguisher", count:112 },
+  { type:"First Aid Kit", count:58 },
+  { type:"Evacuation Chair", count:22 },
+  { type:"Eyewash Station", count:16 },
+];
+
+let siteFilter = "all";
+let rangeFilter = "90";
+let charts = {};
+
+function overallStats(){
+  const totalEquip = SITES_DATA.reduce((s,r)=>s+r.total,0);
+  const totalCompliant = SITES_DATA.reduce((s,r)=>s+r.compliant,0);
+  return {
+    rate: Math.round(totalCompliant/totalEquip*100),
+    totalEquip,
+    overdue: totalEquip-totalCompliant,
+    inspectionsThisMonth: 47,
+  };
+}
+
+function barColor(pct){
+  if(pct>=90) return "#2E7D32";
+  if(pct>=75) return "#B45309";
+  return "#B91C1C";
+}
+
+function renderMain(){
+  const s = overallStats();
+
+  document.getElementById("repRoot").innerHTML = `
+    <div class="rep-toolbar">
+      <div class="rep-select">
+        <select onchange="siteFilter=this.value;renderMain()">
+          <option value="all">All sites</option>
+          ${SITES_DATA.map(r=>`<option value="${r.site}" ${siteFilter===r.site?'selected':''}>${r.site}</option>`).join('')}
+        </select>
+      </div>
+      <div class="rep-select">
+        <select onchange="rangeFilter=this.value;renderMain()">
+          <option value="30" ${rangeFilter==='30'?'selected':''}>Last 30 days</option>
+          <option value="90" ${rangeFilter==='90'?'selected':''}>Last 90 days</option>
+          <option value="180" ${rangeFilter==='180'?'selected':''}>Last 6 months</option>
+          <option value="365" ${rangeFilter==='365'?'selected':''}>Last 12 months</option>
+        </select>
+      </div>
+      <div class="export-group">
+        <div class="export-btn" onclick="alert('Exporting report as CSV...')"><i class="ti ti-file-spreadsheet"></i> CSV</div>
+        <div class="export-btn filled" onclick="alert('Generating PDF report...')"><i class="ti ti-file-type-pdf"></i> PDF Report</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-lbl">Overall compliance</div>
+        <div class="stat-val ok">${s.rate}%</div>
+        <div class="stat-trend up"><i class="ti ti-trending-up"></i> +3% vs last period</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Total equipment</div>
+        <div class="stat-val">${s.totalEquip}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Currently overdue</div>
+        <div class="stat-val bad">${s.overdue}</div>
+        <div class="stat-trend up"><i class="ti ti-trending-down"></i> -5 vs last period</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Inspections this month</div>
+        <div class="stat-val">${s.inspectionsThisMonth}</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="panel">
+        <h2>Compliance rate over time</h2>
+        <div class="panel-sub">Percentage of equipment passing inspection, by month</div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Equipment by type</h2>
+        <div class="panel-sub">Total units tracked, by category</div>
+        <div class="chart-wrap"><canvas id="typeChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Compliance by site</h2>
+      <div class="panel-sub">Compliant vs. total equipment at each location</div>
+      <table class="site-table">
+        <thead><tr><th>Site</th><th>Compliant</th><th style="width:40%">Rate</th></tr></thead>
+        <tbody>
+          ${SITES_DATA.map(r=>{
+            const pct = Math.round(r.compliant/r.total*100);
+            return `<tr>
+              <td>${r.site}</td>
+              <td>${r.compliant} / ${r.total}</td>
+              <td>
+                <div class="bar-cell">
+                  <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColor(pct)}"></div></div>
+                  <div class="pct">${pct}%</div>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  drawCharts();
+}
+
+function drawCharts(){
+  if(charts.trend) charts.trend.destroy();
+  if(charts.type) charts.type.destroy();
+
+  const trendCtx = document.getElementById("trendChart");
+  charts.trend = new Chart(trendCtx, {
+    type: "line",
+    data: {
+      labels: TREND_MONTHS,
+      datasets: [{
+        data: TREND_RATES,
+        borderColor: "#003C6C",
+        backgroundColor: "rgba(0,60,108,0.08)",
+        fill: true,
+        tension: 0.35,
+        pointRadius: 4,
+        pointBackgroundColor: "#003C6C",
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 60, max: 100, ticks: { callback: v => v + "%" }, grid: { color: "#EFEFEF" } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  const typeCtx = document.getElementById("typeChart");
+  charts.type = new Chart(typeCtx, {
+    type: "bar",
+    data: {
+      labels: TYPE_BREAKDOWN.map(t=>t.type),
+      datasets: [{
+        data: TYPE_BREAKDOWN.map(t=>t.count),
+        backgroundColor: "#FDB515",
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: "#EFEFEF" } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", renderMain);
+</script>
+
+<script src="nav.js"></script>
+</body>
+</html>

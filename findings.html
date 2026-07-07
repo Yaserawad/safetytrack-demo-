@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — Findings</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+.fin-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.search-row{display:flex;align-items:center;gap:6px;border:0.5px solid var(--border-strong);border-radius:8px;padding:7px 10px;background:var(--surface-2);flex:1;min-width:160px;max-width:260px}
+.search-row i{color:var(--text-muted);font-size:14px}
+.search-row input{border:none;outline:none;font-size:13px;background:transparent;width:100%}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap}
+.ftab{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border);color:var(--text-secondary);background:var(--surface-2);white-space:nowrap}
+.ftab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.sort-select{margin-left:auto}
+.sort-select select{padding:7px 10px;border:0.5px solid var(--border-strong);border-radius:8px;font-size:12px;background:var(--surface-2);color:var(--text-secondary);font-family:var(--font-sans)}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media (max-width:700px){.stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-lbl{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;color:var(--navy)}
+.stat-val.bad{color:var(--bad)}
+.stat-val.warn{color:var(--warn)}
+.stat-val.ok{color:var(--ok)}
+
+.fin-list{display:flex;flex-direction:column;gap:10px}
+.fin-card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:14px;border-left:4px solid var(--border)}
+.fin-card.priority-high{border-left-color:var(--bad)}
+.fin-card.priority-medium{border-left-color:var(--warn)}
+.fin-card.priority-low{border-left-color:var(--text-muted)}
+.fin-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.fin-eq{font-size:14px;font-weight:600}
+.fin-site{font-size:12px;color:var(--text-secondary)}
+.fin-desc{font-size:13px;color:var(--text-primary);margin:8px 0;line-height:1.4}
+.fin-meta{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--text-secondary);margin-bottom:10px}
+.fin-meta span{display:flex;align-items:center;gap:4px}
+.fin-actions{display:flex;gap:8px;flex-wrap:wrap;border-top:0.5px solid var(--border);padding-top:10px}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.open{background:var(--bad-bg);color:var(--bad)}
+.badge.progress{background:var(--warn-bg);color:var(--warn)}
+.badge.resolved{background:var(--ok-bg);color:var(--ok)}
+.prio-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.prio-tag.high{color:var(--bad)}
+.prio-tag.medium{color:var(--warn)}
+.prio-tag.low{color:var(--text-muted)}
+
+.btn-sm{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border);background:var(--surface-2);color:var(--text-secondary)}
+.btn-sm:hover{background:var(--surface-1)}
+.btn-sm.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-sm.primary:hover{background:var(--navy-dark)}
+.btn-sm.success{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn-sm.success:hover{opacity:.9}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty-state i{font-size:32px;margin-bottom:8px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{background:var(--surface-2);border-radius:14px;max-width:460px;width:100%;max-height:88vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:0.5px solid var(--border)}
+.modal-head-icon{width:32px;height:32px;border-radius:8px;background:var(--bad-bg);color:var(--bad);display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:15px;font-weight:600;color:var(--navy);flex:1}
+.modal-close{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted)}
+.modal-close:hover{background:var(--surface-1)}
+.modal-body{padding:16px 18px}
+.detail-row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--text-secondary)}
+.detail-val{font-weight:600;text-align:right}
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;letter-spacing:.03em}
+.status-options{display:flex;gap:6px;flex-wrap:wrap}
+.status-opt{padding:7px 12px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--text-secondary)}
+.status-opt.selected.open{border-color:var(--bad);background:var(--bad-bg);color:var(--bad);font-weight:600}
+.status-opt.selected.progress{border-color:var(--warn);background:var(--warn-bg);color:var(--warn);font-weight:600}
+.status-opt.selected.resolved{border-color:var(--ok);background:var(--ok-bg);color:var(--ok);font-weight:600}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+.form-label{font-size:11px;font-weight:500;color:var(--text-secondary)}
+.form-group textarea, .form-group select, .form-group input{padding:8px 10px;border:0.5px solid var(--border-strong);border-radius:6px;font-size:13px;outline:none;font-family:var(--font-sans);width:100%}
+.form-group textarea{resize:vertical;min-height:60px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:0.5px solid var(--border)}
+.btn-cancel{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border);background:var(--surface-2);font-size:13px;font-weight:500;cursor:pointer;color:var(--text-secondary)}
+.btn-save{padding:8px 16px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
+.btn-save:hover{background:var(--navy-dark)}
+</style>
+</head>
+<body>
+
+<div id="page-content">
+  <div id="finRoot"></div>
+</div>
+
+<script>
+const INSPECTORS = ["Jasmine Alvarez","Tom Nguyen","Rachel Ford","Maria Torres","David Kim"];
+
+let findings = [
+  { id:1, equipment:"EW-004", type:"Eyewash Station", site:"Baskin Engineering",
+    description:"Weak water flow during flow test — pressure well below required minimum.",
+    priority:"high", status:"open", reportedBy:"Tom Nguyen", reportedDate:"2026-06-27",
+    assignee:"David Kim", dueDate:"2026-07-09", resolutionNote:"" },
+  { id:2, equipment:"AED-014", type:"AED", site:"McHenry Library",
+    description:"Battery expired 6/1/2026. Unit shows fault indicator.",
+    priority:"high", status:"progress", reportedBy:"Jasmine Alvarez", reportedDate:"2026-06-08",
+    assignee:"Maria Torres", dueDate:"2026-07-05", resolutionNote:"Replacement battery ordered, arriving 7/3." },
+  { id:3, equipment:"FE-231", type:"Fire Extinguisher", site:"Porter College",
+    description:"Pressure gauge reading in red zone — under-pressurized.",
+    priority:"high", status:"resolved", reportedBy:"Rachel Ford", reportedDate:"2026-05-18",
+    assignee:"David Kim", dueDate:"2026-05-25", resolutionNote:"Unit swapped with fresh extinguisher on 5/22. Old unit sent for recharge." },
+  { id:4, equipment:"FAK-092", type:"First Aid Kit", site:"Kresge Town Hall",
+    description:"Several supplies (gauze, antiseptic wipes) missing or expired.",
+    priority:"medium", status:"open", reportedBy:"Maria Torres", reportedDate:"2026-07-01",
+    assignee:"Maria Torres", dueDate:"2026-07-12", resolutionNote:"" },
+  { id:5, equipment:"EVC-005", type:"Evacuation Chair", site:"Science Hill Bldg 3",
+    description:"One securing strap frayed, should be replaced as a precaution.",
+    priority:"low", status:"progress", reportedBy:"Tom Nguyen", reportedDate:"2026-06-20",
+    assignee:"David Kim", dueDate:"2026-07-18", resolutionNote:"Replacement strap on order." },
+];
+
+let activeTab = "open";
+let searchTerm = "";
+let sortBy = "priority";
+let openId = null;
+let draftStatus = "";
+let draftNote = "";
+
+function stats(){
+  return {
+    open: findings.filter(f=>f.status==="open").length,
+    progress: findings.filter(f=>f.status==="progress").length,
+    resolved: findings.filter(f=>f.status==="resolved").length,
+    highPriority: findings.filter(f=>f.priority==="high" && f.status!=="resolved").length,
+  };
+}
+function statusBadge(s){
+  if(s==="open") return `<span class="badge open"><i class="ti ti-alert-triangle"></i>Open</span>`;
+  if(s==="progress") return `<span class="badge progress"><i class="ti ti-clock"></i>In progress</span>`;
+  return `<span class="badge resolved"><i class="ti ti-check"></i>Resolved</span>`;
+}
+function priorityWeight(p){ return { high:0, medium:1, low:2 }[p]; }
+
+function filteredRows(){
+  let rows = findings;
+  if(activeTab!=="all") rows = rows.filter(f=>f.status===activeTab);
+  if(searchTerm.trim()){
+    const t = searchTerm.toLowerCase();
+    rows = rows.filter(f =>
+      f.equipment.toLowerCase().includes(t) ||
+      f.site.toLowerCase().includes(t) ||
+      f.description.toLowerCase().includes(t)
+    );
+  }
+  rows = [...rows];
+  if(sortBy==="priority") rows.sort((a,b)=>priorityWeight(a.priority)-priorityWeight(b.priority));
+  if(sortBy==="due") rows.sort((a,b)=> new Date(a.dueDate)-new Date(b.dueDate));
+  if(sortBy==="recent") rows.sort((a,b)=> new Date(b.reportedDate)-new Date(a.reportedDate));
+  return rows;
+}
+
+function renderMain(){
+  const s = stats();
+  const rows = filteredRows();
+
+  document.getElementById("finRoot").innerHTML = `
+    <div class="fin-toolbar">
+      <div class="search-row">
+        <i class="ti ti-search"></i>
+        <input placeholder="Search equipment, site, or description" value="${searchTerm}" oninput="searchTerm=this.value;renderMain()"/>
+      </div>
+      <div class="ftabs">
+        <div class="ftab ${activeTab==='all'?'active':''}" onclick="activeTab='all';renderMain()">All</div>
+        <div class="ftab ${activeTab==='open'?'active':''}" onclick="activeTab='open';renderMain()">Open</div>
+        <div class="ftab ${activeTab==='progress'?'active':''}" onclick="activeTab='progress';renderMain()">In progress</div>
+        <div class="ftab ${activeTab==='resolved'?'active':''}" onclick="activeTab='resolved';renderMain()">Resolved</div>
+      </div>
+      <div class="sort-select">
+        <select onchange="sortBy=this.value;renderMain()">
+          <option value="priority" ${sortBy==='priority'?'selected':''}>Sort: Priority</option>
+          <option value="due" ${sortBy==='due'?'selected':''}>Sort: Due date</option>
+          <option value="recent" ${sortBy==='recent'?'selected':''}>Sort: Most recent</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-lbl">Open</div><div class="stat-val bad">${s.open}</div></div>
+      <div class="stat"><div class="stat-lbl">In progress</div><div class="stat-val warn">${s.progress}</div></div>
+      <div class="stat"><div class="stat-lbl">Resolved</div><div class="stat-val ok">${s.resolved}</div></div>
+      <div class="stat"><div class="stat-lbl">High priority open</div><div class="stat-val bad">${s.highPriority}</div></div>
+    </div>
+
+    ${rows.length===0 ? `<div class="empty-state"><i class="ti ti-checkbox"></i><p>No findings match this filter.</p></div>` : `
+    <div class="fin-list">
+      ${rows.map(f=>`
+        <div class="fin-card priority-${f.priority}">
+          <div class="fin-top">
+            <div>
+              <div class="fin-eq">${f.equipment} <span class="prio-tag ${f.priority}">· ${f.priority} priority</span></div>
+              <div class="fin-site">${f.type} · ${f.site}</div>
+            </div>
+            ${statusBadge(f.status)}
+          </div>
+          <div class="fin-desc">${f.description}</div>
+          <div class="fin-meta">
+            <span><i class="ti ti-user"></i>Reported by ${f.reportedBy}, ${f.reportedDate}</span>
+            <span><i class="ti ti-user-check"></i>Assigned to ${f.assignee}</span>
+            <span><i class="ti ti-calendar"></i>Due ${f.dueDate}</span>
+          </div>
+          <div class="fin-actions">
+            <div class="btn-sm primary" onclick="openDetail(${f.id})"><i class="ti ti-edit"></i> Update status</div>
+            ${f.status!=="resolved" ? `<div class="btn-sm success" onclick="quickResolve(${f.id})"><i class="ti ti-check"></i> Mark resolved</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    `}
+    <div id="modalView"></div>
+  `;
+  renderModal();
+}
+
+function openDetail(id){
+  const f = findings.find(x=>x.id===id);
+  openId = id;
+  draftStatus = f.status;
+  draftNote = f.resolutionNote;
+  renderMain();
+}
+function closeModal(){ openId = null; renderMain(); }
+function setDraftStatus(s){ draftStatus = s; renderModal(); }
+function quickResolve(id){
+  const f = findings.find(x=>x.id===id);
+  f.status = "resolved";
+  if(!f.resolutionNote) f.resolutionNote = "Marked resolved.";
+  renderMain();
+}
+function saveDetail(){
+  const f = findings.find(x=>x.id===openId);
+  f.status = draftStatus;
+  f.resolutionNote = document.getElementById("f_note").value;
+  openId = null;
+  renderMain();
+}
+
+function renderModal(){
+  const mv = document.getElementById("modalView");
+  if(!mv) return;
+  if(!openId){ mv.innerHTML = ""; return; }
+
+  const f = findings.find(x=>x.id===openId);
+  mv.innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-head-icon"><i class="ti ti-alert-triangle"></i></div>
+        <div class="modal-title">${f.equipment} — ${f.site}</div>
+        <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row"><div class="detail-label">Issue</div><div class="detail-val" style="text-align:right;max-width:260px">${f.description}</div></div>
+        <div class="detail-row"><div class="detail-label">Reported by</div><div class="detail-val">${f.reportedBy}, ${f.reportedDate}</div></div>
+        <div class="detail-row"><div class="detail-label">Assigned to</div><div class="detail-val">${f.assignee}</div></div>
+        <div class="detail-row"><div class="detail-label">Due date</div><div class="detail-val">${f.dueDate}</div></div>
+
+        <div class="section-title">Update status</div>
+        <div class="status-options">
+          <div class="status-opt open ${draftStatus==='open'?'selected':''}" onclick="setDraftStatus('open')">Open</div>
+          <div class="status-opt progress ${draftStatus==='progress'?'selected':''}" onclick="setDraftStatus('progress')">In progress</div>
+          <div class="status-opt resolved ${draftStatus==='resolved'?'selected':''}" onclick="setDraftStatus('resolved')">Resolved</div>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">Resolution notes</div>
+          <textarea id="f_note" placeholder="What was done to address this...">${draftNote}</textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="saveDetail()">Save changes</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+document.addEventListener("DOMContentLoaded", renderMain);
+</script>
+
+<script src="nav.js"></script>
+</body>
+</html>

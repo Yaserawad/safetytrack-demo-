@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — Equipment</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+.eq-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.search-row{display:flex;align-items:center;gap:6px;border:0.5px solid var(--border-strong);border-radius:8px;padding:7px 10px;background:var(--surface-2);flex:1;min-width:160px;max-width:260px}
+.search-row i{color:var(--text-muted);font-size:14px}
+.search-row input{border:none;outline:none;font-size:13px;background:transparent;width:100%}
+.eq-select select{padding:7px 10px;border:0.5px solid var(--border-strong);border-radius:8px;font-size:12px;background:var(--surface-2);color:var(--text-secondary);font-family:var(--font-sans)}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap}
+.ftab{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border);color:var(--text-secondary);background:var(--surface-2);white-space:nowrap}
+.ftab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.add-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-left:auto;white-space:nowrap}
+.add-btn:hover{background:var(--navy-dark)}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media (max-width:700px){.stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-lbl{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;color:var(--navy)}
+.stat-val.ok{color:var(--ok)}
+.stat-val.warn{color:var(--warn)}
+.stat-val.bad{color:var(--bad)}
+
+.eq-table{width:100%;border-collapse:collapse;background:var(--surface-2);border-radius:12px;overflow:hidden;border:0.5px solid var(--border)}
+.eq-table th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-secondary);background:var(--surface-1);padding:10px 14px;white-space:nowrap}
+.eq-table td{padding:10px 14px;font-size:13px;border-top:0.5px solid var(--border);vertical-align:middle}
+.eq-id{font-weight:600}
+.eq-sub{font-size:11px;color:var(--text-secondary)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.bad{background:var(--bad-bg);color:var(--bad)}
+.row-actions{display:flex;gap:6px}
+.icon-btn{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);border:0.5px solid var(--border);background:var(--surface-2)}
+.icon-btn:hover{background:var(--surface-1)}
+.icon-btn.danger:hover{color:var(--bad);border-color:var(--bad)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty-state i{font-size:32px;margin-bottom:8px}
+
+.mobile-cards{display:none;flex-direction:column;gap:10px}
+@media (max-width:800px){
+  .eq-table{display:none}
+  .mobile-cards{display:flex}
+}
+.m-card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:12px}
+.m-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.m-card-actions{display:flex;gap:6px;margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{background:var(--surface-2);border-radius:14px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:0.5px solid var(--border)}
+.modal-head-icon{width:32px;height:32px;border-radius:8px;background:#E8EFF6;color:var(--navy);display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:15px;font-weight:600;color:var(--navy);flex:1}
+.modal-close{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted)}
+.modal-close:hover{background:var(--surface-1)}
+.modal-body{padding:16px 18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:11px;font-weight:500;color:var(--text-secondary)}
+.form-label span{color:var(--bad);margin-left:2px}
+.form-group input,.form-group select{padding:8px 10px;border:0.5px solid var(--border-strong);border-radius:6px;font-size:13px;outline:none;background:var(--surface-2);font-family:var(--font-sans)}
+.form-group input:focus,.form-group select:focus{border-color:var(--navy)}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:0.5px solid var(--border)}
+.btn-cancel{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border);background:var(--surface-2);font-size:13px;font-weight:500;cursor:pointer;color:var(--text-secondary)}
+.btn-save{padding:8px 16px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
+.btn-save:hover{background:var(--navy-dark)}
+.btn-danger-confirm{padding:8px 16px;border-radius:8px;border:none;background:var(--bad);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div id="page-content">
+  <div id="eqRoot"></div>
+</div>
+
+<script>
+const SITES = ["McHenry Library","Kresge Town Hall","Science Hill Bldg 3","Porter College",
+  "Cowell College","Crown College","Baskin Engineering","Communications Building"];
+const TYPES = ["AED","Fire Extinguisher","First Aid Kit","Evacuation Chair","Eyewash Station"];
+const FREQUENCIES = ["Weekly","Monthly","Quarterly","Annually"];
+
+let equipment = [
+  { id:"AED-014", type:"AED", site:"McHenry Library", location:"2nd floor, near elevator", frequency:"Monthly", lastInspected:"2026-06-08", status:"overdue" },
+  { id:"AED-021", type:"AED", site:"Porter College", location:"Main lobby", frequency:"Monthly", lastInspected:"2026-06-29", status:"compliant" },
+  { id:"FAK-092", type:"First Aid Kit", site:"Kresge Town Hall", location:"Break room", frequency:"Quarterly", lastInspected:"2026-06-02", status:"compliant" },
+  { id:"EVC-005", type:"Evacuation Chair", site:"Science Hill Bldg 3", location:"Stairwell B", frequency:"Monthly", lastInspected:"2026-05-30", status:"overdue" },
+  { id:"FE-231", type:"Fire Extinguisher", site:"Porter College", location:"Kitchen hallway", frequency:"Monthly", lastInspected:"2026-06-15", status:"due-soon" },
+  { id:"FE-118", type:"Fire Extinguisher", site:"Cowell College", location:"1st floor exit", frequency:"Monthly", lastInspected:"2026-06-25", status:"compliant" },
+  { id:"EW-004", type:"Eyewash Station", site:"Baskin Engineering", location:"Chem lab 220", frequency:"Weekly", lastInspected:"2026-06-27", status:"overdue" },
+  { id:"AED-033", type:"AED", site:"Crown College", location:"Front desk", frequency:"Monthly", lastInspected:"2026-06-20", status:"due-soon" },
+];
+
+let activeType = "all";
+let searchTerm = "";
+let siteFilter = "all";
+let modalMode = null; // null | 'add' | 'edit' | 'delete'
+let editItem = {};
+let deleteTarget = null;
+
+function statusBadge(s){
+  if(s==="compliant") return `<span class="badge ok"><i class="ti ti-check"></i>Compliant</span>`;
+  if(s==="due-soon") return `<span class="badge warn"><i class="ti ti-clock"></i>Due soon</span>`;
+  return `<span class="badge bad"><i class="ti ti-alert-triangle"></i>Overdue</span>`;
+}
+function stats(){
+  return {
+    total: equipment.length,
+    compliant: equipment.filter(e=>e.status==="compliant").length,
+    dueSoon: equipment.filter(e=>e.status==="due-soon").length,
+    overdue: equipment.filter(e=>e.status==="overdue").length,
+  };
+}
+function filteredRows(){
+  let rows = equipment;
+  if(activeType!=="all") rows = rows.filter(e=>e.type===activeType);
+  if(siteFilter!=="all") rows = rows.filter(e=>e.site===siteFilter);
+  if(searchTerm.trim()){
+    const t = searchTerm.toLowerCase();
+    rows = rows.filter(e =>
+      e.id.toLowerCase().includes(t) ||
+      e.site.toLowerCase().includes(t) ||
+      e.location.toLowerCase().includes(t)
+    );
+  }
+  return rows;
+}
+
+function renderMain(){
+  const s = stats();
+  const rows = filteredRows();
+
+  document.getElementById("eqRoot").innerHTML = `
+    <div class="eq-toolbar">
+      <div class="search-row">
+        <i class="ti ti-search"></i>
+        <input placeholder="Search ID, site, or location" value="${searchTerm}" oninput="searchTerm=this.value;renderMain()"/>
+      </div>
+      <div class="ftabs">
+        <div class="ftab ${activeType==='all'?'active':''}" onclick="activeType='all';renderMain()">All types</div>
+        ${TYPES.map(t=>`<div class="ftab ${activeType===t?'active':''}" onclick="activeType='${t}';renderMain()">${t}</div>`).join('')}
+      </div>
+      <div class="eq-select">
+        <select onchange="siteFilter=this.value;renderMain()">
+          <option value="all">All sites</option>
+          ${SITES.map(s=>`<option value="${s}" ${siteFilter===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <button class="add-btn" onclick="openAdd()"><i class="ti ti-plus"></i> Add equipment</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-lbl">Total equipment</div><div class="stat-val">${s.total}</div></div>
+      <div class="stat"><div class="stat-lbl">Compliant</div><div class="stat-val ok">${s.compliant}</div></div>
+      <div class="stat"><div class="stat-lbl">Due soon</div><div class="stat-val warn">${s.dueSoon}</div></div>
+      <div class="stat"><div class="stat-lbl">Overdue</div><div class="stat-val bad">${s.overdue}</div></div>
+    </div>
+
+    ${rows.length===0 ? `<div class="empty-state"><i class="ti ti-fire-extinguisher"></i><p>No equipment matches this filter.</p></div>` : `
+    <table class="eq-table">
+      <thead><tr><th>Equipment</th><th>Site</th><th>Location</th><th>Frequency</th><th>Last inspected</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(e=>`<tr>
+          <td><div class="eq-id">${e.id}</div><div class="eq-sub">${e.type}</div></td>
+          <td>${e.site}</td>
+          <td>${e.location}</td>
+          <td>${e.frequency}</td>
+          <td>${e.lastInspected}</td>
+          <td>${statusBadge(e.status)}</td>
+          <td>
+            <div class="row-actions">
+              <div class="icon-btn" onclick="openEdit('${e.id}')"><i class="ti ti-edit"></i></div>
+              <div class="icon-btn danger" onclick="confirmDelete('${e.id}')"><i class="ti ti-trash"></i></div>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="mobile-cards">
+      ${rows.map(e=>`
+        <div class="m-card">
+          <div class="m-card-top">
+            <div><div class="eq-id">${e.id}</div><div class="eq-sub">${e.type} · ${e.site}</div></div>
+            ${statusBadge(e.status)}
+          </div>
+          <div class="eq-sub">${e.location} · ${e.frequency} · Last inspected ${e.lastInspected}</div>
+          <div class="m-card-actions">
+            <div class="icon-btn" onclick="openEdit('${e.id}')" style="flex:1"><i class="ti ti-edit"></i></div>
+            <div class="icon-btn danger" onclick="confirmDelete('${e.id}')" style="flex:1"><i class="ti ti-trash"></i></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    `}
+    <div id="modalView"></div>
+  `;
+  renderModal();
+}
+
+function openAdd(){
+  editItem = { id:"", type:TYPES[0], site:SITES[0], location:"", frequency:FREQUENCIES[0], lastInspected:"", status:"compliant" };
+  modalMode = "add";
+  renderMain();
+}
+function openEdit(id){
+  editItem = { ...equipment.find(e=>e.id===id) };
+  modalMode = "edit";
+  renderMain();
+}
+function confirmDelete(id){
+  deleteTarget = id;
+  modalMode = "delete";
+  renderMain();
+}
+function closeModal(){
+  modalMode = null;
+  deleteTarget = null;
+  renderMain();
+}
+function doDelete(){
+  equipment = equipment.filter(e=>e.id!==deleteTarget);
+  modalMode = null;
+  deleteTarget = null;
+  renderMain();
+}
+function saveEquipment(){
+  const id = document.getElementById("f_id").value.trim();
+  if(!id){ alert("Equipment ID is required."); return; }
+  const type = document.getElementById("f_type").value;
+  const site = document.getElementById("f_site").value;
+  const location = document.getElementById("f_location").value.trim();
+  const frequency = document.getElementById("f_frequency").value;
+  const lastInspected = document.getElementById("f_last").value || "—";
+
+  if(modalMode==="edit"){
+    const e = equipment.find(x=>x.id===editItem.id);
+    Object.assign(e, { id, type, site, location, frequency, lastInspected });
+  } else {
+    if(equipment.some(e=>e.id===id)){ alert("An equipment ID with that name already exists."); return; }
+    equipment.push({ id, type, site, location, frequency, lastInspected, status:"compliant" });
+  }
+  modalMode = null;
+  renderMain();
+}
+
+function renderModal(){
+  const mv = document.getElementById("modalView");
+  if(!mv) return;
+  if(!modalMode){ mv.innerHTML = ""; return; }
+
+  if(modalMode==="delete"){
+    mv.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal" style="max-width:380px">
+        <div class="modal-head">
+          <div class="modal-head-icon" style="background:var(--bad-bg);color:var(--bad)"><i class="ti ti-trash"></i></div>
+          <div class="modal-title">Delete equipment</div>
+          <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px;color:var(--text-secondary)">Are you sure you want to delete <strong>${deleteTarget}</strong>? This can't be undone. Past inspection history for this unit will remain in History but will no longer be linked to an active piece of equipment.</p>
+        </div>
+        <div class="modal-foot">
+          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="btn-danger-confirm" onclick="doDelete()">Delete</button>
+        </div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const isEdit = modalMode==="edit";
+  mv.innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-head-icon"><i class="ti ti-fire-extinguisher"></i></div>
+        <div class="modal-title">${isEdit?'Edit equipment':'Add new equipment'}</div>
+        <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full"><div class="form-label">Equipment ID<span>*</span></div><input id="f_id" value="${editItem.id||''}" placeholder="AED-014"/></div>
+          <div class="form-group"><div class="form-label">Type</div>
+            <select id="f_type">${TYPES.map(t=>`<option ${editItem.type===t?'selected':''}>${t}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><div class="form-label">Site</div>
+            <select id="f_site">${SITES.map(s=>`<option ${editItem.site===s?'selected':''}>${s}</option>`).join('')}</select>
+          </div>
+          <div class="form-group full"><div class="form-label">Location detail</div><input id="f_location" value="${editItem.location||''}" placeholder="2nd floor, near elevator"/></div>
+          <div class="form-group"><div class="form-label">Inspection frequency</div>
+            <select id="f_frequency">${FREQUENCIES.map(f=>`<option ${editItem.frequency===f?'selected':''}>${f}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><div class="form-label">Last inspected</div><input id="f_last" type="date" value="${editItem.lastInspected!=='—'?editItem.lastInspected||'':''}"/></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="saveEquipment()">${isEdit?'Save changes':'Add equipment'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+document.addEventListener("DOMContentLoaded", renderMain);
+</script>
+
+<script src="nav.js"></script>
+</body>
+</html>

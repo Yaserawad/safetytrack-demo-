@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — History</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+.hist-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.search-row{display:flex;align-items:center;gap:6px;border:0.5px solid var(--border-strong);border-radius:8px;padding:7px 10px;background:var(--surface-2);flex:1;min-width:160px;max-width:260px}
+.search-row i{color:var(--text-muted);font-size:14px}
+.search-row input{border:none;outline:none;font-size:13px;background:transparent;width:100%}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap}
+.ftab{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border);color:var(--text-secondary);background:var(--surface-2);white-space:nowrap}
+.ftab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.date-select{margin-left:auto}
+.date-select select{padding:7px 10px;border:0.5px solid var(--border-strong);border-radius:8px;font-size:12px;background:var(--surface-2);color:var(--text-secondary);font-family:var(--font-sans)}
+.export-btn{display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--surface-2);color:var(--navy);border:0.5px solid var(--navy);border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.export-btn:hover{background:#F5F8FB}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media (max-width:700px){.stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-lbl{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;color:var(--navy)}
+.stat-val.ok{color:var(--ok)}
+.stat-val.bad{color:var(--bad)}
+
+.hist-table{width:100%;border-collapse:collapse;background:var(--surface-2);border-radius:12px;overflow:hidden;border:0.5px solid var(--border)}
+.hist-table th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-secondary);background:var(--surface-1);padding:10px 14px;white-space:nowrap}
+.hist-table td{padding:10px 14px;font-size:13px;border-top:0.5px solid var(--border);vertical-align:middle}
+.hist-row{cursor:pointer}
+.hist-row:hover{background:var(--surface-1)}
+.hist-eq{font-weight:600}
+.hist-site{font-size:11px;color:var(--text-secondary)}
+.inspector{display:flex;align-items:center;gap:6px}
+.mini-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.bad{background:var(--bad-bg);color:var(--bad)}
+.chev{color:var(--text-muted)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty-state i{font-size:32px;margin-bottom:8px}
+
+.mobile-cards{display:none;flex-direction:column;gap:10px}
+@media (max-width:760px){
+  .hist-table{display:none}
+  .mobile-cards{display:flex}
+}
+.m-card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer}
+.m-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{background:var(--surface-2);border-radius:14px;max-width:460px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:0.5px solid var(--border)}
+.modal-head-icon{width:32px;height:32px;border-radius:8px;background:#E8EFF6;color:var(--navy);display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:15px;font-weight:600;color:var(--navy);flex:1}
+.modal-close{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted)}
+.modal-close:hover{background:var(--surface-1)}
+.modal-body{padding:16px 18px}
+.detail-row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--text-secondary)}
+.detail-val{font-weight:600;text-align:right}
+.check-line{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:0.5px solid var(--border)}
+.check-line:last-child{border-bottom:none}
+.finding-note{background:var(--bad-bg);color:#8a1616;font-size:12px;padding:8px 10px;border-radius:8px;margin-top:8px}
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin:14px 0 6px;letter-spacing:.03em}
+</style>
+</head>
+<body>
+
+<div id="page-content">
+  <div id="histRoot"></div>
+</div>
+
+<script>
+const RECORDS = [
+  { id:1, equipment:"AED-021", type:"AED", site:"Porter College", inspector:"Maria Torres", date:"2026-06-29", result:"pass",
+    checks:[{q:"Unit unobstructed",r:"pass"},{q:"Cabinet undamaged",r:"pass"},{q:"Signage visible",r:"pass"},{q:"Status indicator ready",r:"pass"},{q:"Battery valid",r:"pass"},{q:"Pads within expiration",r:"pass"}], note:null },
+  { id:2, equipment:"EW-004", type:"Eyewash Station", site:"Baskin Engineering", inspector:"Tom Nguyen", date:"2026-06-27", result:"fail",
+    checks:[{q:"Unit unobstructed",r:"pass"},{q:"Flow test",r:"fail"},{q:"Signage visible",r:"pass"}], note:"Weak water flow — needs plumbing check. Corrective action opened." },
+  { id:3, equipment:"FE-118", type:"Fire Extinguisher", site:"Cowell College", inspector:"Jasmine Alvarez", date:"2026-06-25", result:"pass",
+    checks:[{q:"Pressure gauge in range",r:"pass"},{q:"Pin and seal intact",r:"pass"},{q:"Signage visible",r:"pass"}], note:null },
+  { id:4, equipment:"AED-014", type:"AED", site:"McHenry Library", inspector:"Jasmine Alvarez", date:"2026-06-08", result:"fail",
+    checks:[{q:"Unit unobstructed",r:"pass"},{q:"Cabinet undamaged",r:"pass"},{q:"Battery valid",r:"fail"}], note:"Battery expired 6/1. Replacement ordered, corrective action opened." },
+  { id:5, equipment:"FAK-092", type:"First Aid Kit", site:"Kresge Town Hall", inspector:"Maria Torres", date:"2026-06-02", result:"pass",
+    checks:[{q:"Supplies fully stocked",r:"pass"},{q:"No expired items",r:"pass"}], note:null },
+  { id:6, equipment:"EVC-005", type:"Evacuation Chair", site:"Science Hill Bldg 3", inspector:"Tom Nguyen", date:"2026-05-30", result:"pass",
+    checks:[{q:"Straps intact",r:"pass"},{q:"Wheels move freely",r:"pass"},{q:"Signage visible",r:"pass"}], note:null },
+  { id:7, equipment:"FE-231", type:"Fire Extinguisher", site:"Porter College", inspector:"Rachel Ford", date:"2026-05-18", result:"fail",
+    checks:[{q:"Pressure gauge in range",r:"fail"},{q:"Pin and seal intact",r:"pass"}], note:"Gauge reading in red zone. Unit pulled and replaced, corrective action opened." },
+];
+
+let activeTab = "all";
+let searchTerm = "";
+let dateRange = "all";
+let openRecordId = null;
+
+function initials(name){ return name.split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase(); }
+function avatarColor(name){
+  const palette = [{bg:"#E8EFF6",color:"#003C6C"},{bg:"#E8F5E9",color:"#2E7D32"},{bg:"#FEF3D6",color:"#B45309"},{bg:"#F3E8F6",color:"#7B1FA2"}];
+  let hash = 0; for(const c of name) hash += c.charCodeAt(0);
+  return palette[hash % palette.length];
+}
+function resultBadge(r){
+  return r==="pass"
+    ? `<span class="badge ok"><i class="ti ti-check"></i>Passed</span>`
+    : `<span class="badge bad"><i class="ti ti-alert-triangle"></i>Finding</span>`;
+}
+function withinRange(dateStr){
+  if(dateRange==="all") return true;
+  const days = { "7":7, "30":30, "90":90 }[dateRange];
+  const d = Math.round((new Date("2026-07-07") - new Date(dateStr)) / 86400000);
+  return d <= days;
+}
+function stats(){
+  const rows = RECORDS.filter(r=>withinRange(r.date));
+  return {
+    total: rows.length,
+    passed: rows.filter(r=>r.result==="pass").length,
+    findings: rows.filter(r=>r.result==="fail").length,
+  };
+}
+function filteredRows(){
+  let rows = RECORDS.filter(r=>withinRange(r.date));
+  if(activeTab!=="all") rows = rows.filter(r=>r.result===activeTab);
+  if(searchTerm.trim()){
+    const t = searchTerm.toLowerCase();
+    rows = rows.filter(r =>
+      r.equipment.toLowerCase().includes(t) ||
+      r.site.toLowerCase().includes(t) ||
+      r.inspector.toLowerCase().includes(t)
+    );
+  }
+  return rows.sort((a,b)=> new Date(b.date) - new Date(a.date));
+}
+
+function renderMain(){
+  const s = stats();
+  const rows = filteredRows();
+
+  document.getElementById("histRoot").innerHTML = `
+    <div class="hist-toolbar">
+      <div class="search-row">
+        <i class="ti ti-search"></i>
+        <input placeholder="Search equipment, site, or inspector" value="${searchTerm}" oninput="searchTerm=this.value;renderMain()"/>
+      </div>
+      <div class="ftabs">
+        <div class="ftab ${activeTab==='all'?'active':''}" onclick="activeTab='all';renderMain()">All</div>
+        <div class="ftab ${activeTab==='pass'?'active':''}" onclick="activeTab='pass';renderMain()">Passed</div>
+        <div class="ftab ${activeTab==='fail'?'active':''}" onclick="activeTab='fail';renderMain()">Findings</div>
+      </div>
+      <div class="date-select">
+        <select onchange="dateRange=this.value;renderMain()">
+          <option value="all" ${dateRange==='all'?'selected':''}>All time</option>
+          <option value="7" ${dateRange==='7'?'selected':''}>Last 7 days</option>
+          <option value="30" ${dateRange==='30'?'selected':''}>Last 30 days</option>
+          <option value="90" ${dateRange==='90'?'selected':''}>Last 90 days</option>
+        </select>
+      </div>
+      <div class="export-btn" onclick="alert('Exporting history as CSV...')"><i class="ti ti-download"></i> Export</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-lbl">Total inspections</div><div class="stat-val">${s.total}</div></div>
+      <div class="stat"><div class="stat-lbl">Passed</div><div class="stat-val ok">${s.passed}</div></div>
+      <div class="stat"><div class="stat-lbl">Findings</div><div class="stat-val bad">${s.findings}</div></div>
+      <div class="stat"><div class="stat-lbl">Pass rate</div><div class="stat-val">${s.total?Math.round(s.passed/s.total*100):0}%</div></div>
+    </div>
+
+    ${rows.length===0 ? `<div class="empty-state"><i class="ti ti-history-off"></i><p>No inspection history matches this filter.</p></div>` : `
+    <table class="hist-table">
+      <thead><tr><th>Equipment</th><th>Site</th><th>Inspector</th><th>Date</th><th>Result</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(r=>{
+          const av = avatarColor(r.inspector);
+          return `<tr class="hist-row" onclick="openRecordId=${r.id};renderMain()">
+            <td><div class="hist-eq">${r.equipment}</div><div class="hist-site">${r.type}</div></td>
+            <td>${r.site}</td>
+            <td><div class="inspector"><div class="mini-avatar" style="background:${av.bg};color:${av.color}">${initials(r.inspector)}</div>${r.inspector}</div></td>
+            <td>${r.date}</td>
+            <td>${resultBadge(r.result)}</td>
+            <td><i class="ti ti-chevron-right chev"></i></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <div class="mobile-cards">
+      ${rows.map(r=>{
+        const av = avatarColor(r.inspector);
+        return `<div class="m-card" onclick="openRecordId=${r.id};renderMain()">
+          <div class="m-card-top">
+            <div><div class="hist-eq">${r.equipment}</div><div class="hist-site">${r.type} · ${r.site}</div></div>
+            ${resultBadge(r.result)}
+          </div>
+          <div class="inspector"><div class="mini-avatar" style="background:${av.bg};color:${av.color}">${initials(r.inspector)}</div>${r.inspector} · ${r.date}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    `}
+    <div id="modalView"></div>
+  `;
+  renderModal();
+}
+
+function closeModal(){ openRecordId = null; renderMain(); }
+
+function renderModal(){
+  const mv = document.getElementById("modalView");
+  if(!mv) return;
+  if(!openRecordId){ mv.innerHTML = ""; return; }
+
+  const r = RECORDS.find(x=>x.id===openRecordId);
+  mv.innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-head-icon"><i class="ti ti-clipboard-check"></i></div>
+        <div class="modal-title">${r.equipment} — ${r.date}</div>
+        <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row"><div class="detail-label">Equipment type</div><div class="detail-val">${r.type}</div></div>
+        <div class="detail-row"><div class="detail-label">Site</div><div class="detail-val">${r.site}</div></div>
+        <div class="detail-row"><div class="detail-label">Inspector</div><div class="detail-val">${r.inspector}</div></div>
+        <div class="detail-row"><div class="detail-label">Result</div><div class="detail-val">${resultBadge(r.result)}</div></div>
+
+        <div class="section-title">Checklist</div>
+        ${r.checks.map(c=>`
+          <div class="check-line">
+            <span>${c.q}</span>
+            ${c.r==='pass'
+              ? `<span style="color:var(--ok);font-weight:600"><i class="ti ti-check"></i> Pass</span>`
+              : `<span style="color:var(--bad);font-weight:600"><i class="ti ti-x"></i> Fail</span>`}
+          </div>
+        `).join('')}
+
+        ${r.note ? `<div class="finding-note"><i class="ti ti-alert-triangle"></i> ${r.note}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+document.addEventListener("DOMContentLoaded", renderMain);
+</script>
+
+<script src="nav.js"></script>
+</body>
+</html>

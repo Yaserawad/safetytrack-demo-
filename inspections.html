@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — Inspections</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+.insp-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.search-row{display:flex;align-items:center;gap:6px;border:0.5px solid var(--border-strong);border-radius:8px;padding:7px 10px;background:var(--surface-2);flex:1;min-width:160px;max-width:260px}
+.search-row i{color:var(--text-muted);font-size:14px}
+.search-row input{border:none;outline:none;font-size:13px;background:transparent;width:100%}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap}
+.ftab{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:0.5px solid var(--border);color:var(--text-secondary);background:var(--surface-2);white-space:nowrap}
+.ftab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.assign-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;margin-left:auto;white-space:nowrap}
+.assign-btn:hover{background:var(--navy-dark)}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media (max-width:700px){.stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat-lbl{font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;color:var(--navy)}
+.stat-val.warn{color:var(--warn)}
+.stat-val.bad{color:var(--bad)}
+.stat-val.ok{color:var(--ok)}
+
+.insp-table{width:100%;border-collapse:collapse;background:var(--surface-2);border-radius:12px;overflow:hidden;border:0.5px solid var(--border)}
+.insp-table th{text-align:left;font-size:11px;text-transform:uppercase;color:var(--text-secondary);background:var(--surface-1);padding:10px 14px;white-space:nowrap}
+.insp-table td{padding:10px 14px;font-size:13px;border-top:0.5px solid var(--border);vertical-align:middle}
+.insp-eq{font-weight:600}
+.insp-site{font-size:11px;color:var(--text-secondary)}
+.assignee{display:flex;align-items:center;gap:6px}
+.mini-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.bad{background:var(--bad-bg);color:var(--bad)}
+.badge.muted{background:var(--surface-1);color:var(--text-secondary)}
+.recur-tag{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:4px}
+.row-actions{display:flex;gap:6px}
+.icon-btn{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);border:0.5px solid var(--border);background:var(--surface-2)}
+.icon-btn:hover{background:var(--surface-1)}
+.icon-btn.danger:hover{color:var(--bad);border-color:var(--bad)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty-state i{font-size:32px;margin-bottom:8px}
+
+.mobile-cards{display:none;flex-direction:column;gap:10px}
+@media (max-width:760px){
+  .insp-table{display:none}
+  .mobile-cards{display:flex}
+}
+.m-card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:12px}
+.m-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.m-card-actions{display:flex;gap:6px;margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{background:var(--surface-2);border-radius:14px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:0.5px solid var(--border)}
+.modal-head-icon{width:32px;height:32px;border-radius:8px;background:#E8EFF6;color:var(--navy);display:flex;align-items:center;justify-content:center}
+.modal-title{font-size:15px;font-weight:600;color:var(--navy);flex:1}
+.modal-close{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-muted)}
+.modal-close:hover{background:var(--surface-1)}
+.modal-body{padding:16px 18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:11px;font-weight:500;color:var(--text-secondary)}
+.form-label span{color:var(--bad);margin-left:2px}
+.form-group input,.form-group select{padding:8px 10px;border:0.5px solid var(--border-strong);border-radius:6px;font-size:13px;outline:none;background:var(--surface-2);font-family:var(--font-sans)}
+.form-group input:focus,.form-group select:focus{border-color:var(--navy)}
+.section-divider{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px;letter-spacing:.03em}
+.recur-options{display:flex;gap:6px;flex-wrap:wrap}
+.recur-opt{padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);font-size:12px;cursor:pointer;color:var(--text-secondary)}
+.recur-opt.selected{border-color:var(--navy);background:#F5F8FB;color:var(--navy);font-weight:600}
+.reminder-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px}
+.reminder-row-label{display:flex;flex-direction:column;gap:2px}
+.reminder-row-title{font-size:13px;font-weight:500}
+.reminder-row-desc{font-size:11px;color:var(--text-secondary)}
+.toggle{position:relative;width:38px;height:22px;border-radius:20px;background:var(--border-strong);cursor:pointer;flex-shrink:0;transition:background .15s}
+.toggle.on{background:var(--ok)}
+.toggle-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle.on .toggle-knob{left:18px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:0.5px solid var(--border)}
+.btn-cancel{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border);background:var(--surface-2);font-size:13px;font-weight:500;cursor:pointer;color:var(--text-secondary)}
+.btn-save{padding:8px 16px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:13px;font-weight:500;cursor:pointer}
+.btn-save:hover{background:var(--navy-dark)}
+</style>
+</head>
+<body>
+
+<div id="page-content">
+  <div id="inspRoot"></div>
+</div>
+
+<script>
+const SITES = ["McHenry Library","Kresge Town Hall","Science Hill Bldg 3","Porter College",
+  "Cowell College","Crown College","Baskin Engineering","Communications Building"];
+const EQUIPMENT_TYPES = ["AED","Fire Extinguisher","First Aid Kit","Evacuation Chair","Eyewash Station"];
+const INSPECTORS = [
+  { id:1, name:"Jasmine Alvarez" },
+  { id:2, name:"Tom Nguyen" },
+  { id:3, name:"Rachel Ford" },
+  { id:4, name:"Maria Torres" },
+];
+const RECUR_OPTIONS = [
+  { id:"once", label:"One-time" },
+  { id:"weekly", label:"Weekly" },
+  { id:"monthly", label:"Monthly" },
+  { id:"quarterly", label:"Quarterly" },
+];
+
+let assignments = [
+  { id:1, equipment:"AED-014", type:"AED", site:"McHenry Library", assigneeId:1, dueDate:"2026-07-08", recurrence:"monthly", reminder:true, status:"overdue" },
+  { id:2, equipment:"FAK-092", type:"First Aid Kit", site:"Kresge Town Hall", assigneeId:2, dueDate:"2026-07-10", recurrence:"quarterly", reminder:true, status:"upcoming" },
+  { id:3, equipment:"EVC-005", type:"Evacuation Chair", site:"Science Hill Bldg 3", assigneeId:1, dueDate:"2026-07-06", recurrence:"once", reminder:false, status:"overdue" },
+  { id:4, equipment:"FE-231", type:"Fire Extinguisher", site:"Porter College", assigneeId:3, dueDate:"2026-07-15", recurrence:"monthly", reminder:true, status:"upcoming" },
+  { id:5, equipment:"AED-021", type:"AED", site:"Porter College", assigneeId:4, dueDate:"2026-06-29", recurrence:"monthly", reminder:true, status:"completed" },
+  { id:6, equipment:"EW-004", type:"Eyewash Station", site:"Baskin Engineering", assigneeId:2, dueDate:"2026-07-20", recurrence:"weekly", reminder:false, status:"upcoming" },
+];
+
+let activeTab = "all";
+let searchTerm = "";
+let modalOpen = false;
+let editId = null;
+let formState = {};
+
+function inspectorName(id){ return (INSPECTORS.find(i=>i.id===id)||{}).name || "Unassigned"; }
+function initials(name){ return name.split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase(); }
+function avatarColor(id){
+  const palette = [{bg:"#E8EFF6",color:"#003C6C"},{bg:"#E8F5E9",color:"#2E7D32"},{bg:"#FEF3D6",color:"#B45309"},{bg:"#F3E8F6",color:"#7B1FA2"}];
+  return palette[id % palette.length];
+}
+function daysUntil(dateStr){
+  const today = new Date("2026-07-06");
+  const due = new Date(dateStr);
+  return Math.round((due-today)/(1000*60*60*24));
+}
+function statusBadge(a){
+  if(a.status==="completed") return `<span class="badge ok"><i class="ti ti-check"></i>Completed</span>`;
+  if(a.status==="overdue") return `<span class="badge bad"><i class="ti ti-alert-triangle"></i>Overdue</span>`;
+  const d = daysUntil(a.dueDate);
+  if(d<=3) return `<span class="badge warn"><i class="ti ti-clock"></i>Due soon</span>`;
+  return `<span class="badge muted"><i class="ti ti-calendar"></i>Upcoming</span>`;
+}
+function recurLabel(id){ return (RECUR_OPTIONS.find(r=>r.id===id)||{}).label || id; }
+function stats(){
+  return {
+    scheduled: assignments.filter(a=>a.status==="upcoming").length,
+    overdue: assignments.filter(a=>a.status==="overdue").length,
+    completed: assignments.filter(a=>a.status==="completed").length,
+    recurring: assignments.filter(a=>a.recurrence!=="once").length,
+  };
+}
+
+function filteredRows(){
+  let rows = assignments;
+  if(activeTab!=="all") rows = rows.filter(a=>a.status===activeTab);
+  if(searchTerm.trim()){
+    const t = searchTerm.toLowerCase();
+    rows = rows.filter(a =>
+      a.equipment.toLowerCase().includes(t) ||
+      a.site.toLowerCase().includes(t) ||
+      inspectorName(a.assigneeId).toLowerCase().includes(t)
+    );
+  }
+  return rows;
+}
+
+function renderMain(){
+  const s = stats();
+  const rows = filteredRows();
+
+  document.getElementById("inspRoot").innerHTML = `
+    <div class="insp-toolbar">
+      <div class="search-row">
+        <i class="ti ti-search"></i>
+        <input placeholder="Search equipment, site, or inspector" value="${searchTerm}" oninput="searchTerm=this.value;renderMain()"/>
+      </div>
+      <div class="ftabs">
+        <div class="ftab ${activeTab==='all'?'active':''}" onclick="activeTab='all';renderMain()">All</div>
+        <div class="ftab ${activeTab==='upcoming'?'active':''}" onclick="activeTab='upcoming';renderMain()">Upcoming</div>
+        <div class="ftab ${activeTab==='overdue'?'active':''}" onclick="activeTab='overdue';renderMain()">Overdue</div>
+        <div class="ftab ${activeTab==='completed'?'active':''}" onclick="activeTab='completed';renderMain()">Completed</div>
+      </div>
+      <button class="assign-btn" onclick="openAssign()"><i class="ti ti-calendar-plus"></i> Assign inspection</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-lbl">Scheduled</div><div class="stat-val">${s.scheduled}</div></div>
+      <div class="stat"><div class="stat-lbl">Overdue</div><div class="stat-val bad">${s.overdue}</div></div>
+      <div class="stat"><div class="stat-lbl">Completed</div><div class="stat-val ok">${s.completed}</div></div>
+      <div class="stat"><div class="stat-lbl">Recurring</div><div class="stat-val">${s.recurring}</div></div>
+    </div>
+
+    ${rows.length===0 ? `<div class="empty-state"><i class="ti ti-calendar-off"></i><p>No inspections match this filter.</p></div>` : `
+    <table class="insp-table">
+      <thead><tr><th>Equipment</th><th>Site</th><th>Assigned to</th><th>Due date</th><th>Recurrence</th><th>Status</th><th>Reminder</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(a=>{
+          const av = avatarColor(a.assigneeId);
+          return `<tr>
+            <td><div class="insp-eq">${a.equipment}</div><div class="insp-site">${a.type}</div></td>
+            <td>${a.site}</td>
+            <td><div class="assignee"><div class="mini-avatar" style="background:${av.bg};color:${av.color}">${initials(inspectorName(a.assigneeId))}</div>${inspectorName(a.assigneeId)}</div></td>
+            <td>${a.dueDate}</td>
+            <td><div class="recur-tag"><i class="ti ti-repeat"></i>${recurLabel(a.recurrence)}</div></td>
+            <td>${statusBadge(a)}</td>
+            <td>${a.reminder?'<i class="ti ti-bell" style="color:var(--navy)"></i>':'<i class="ti ti-bell-off" style="color:var(--text-muted)"></i>'}</td>
+            <td>
+              <div class="row-actions">
+                <div class="icon-btn" onclick="openEdit(${a.id})"><i class="ti ti-edit"></i></div>
+                <div class="icon-btn danger" onclick="removeAssignment(${a.id})"><i class="ti ti-trash"></i></div>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <div class="mobile-cards">
+      ${rows.map(a=>{
+        const av = avatarColor(a.assigneeId);
+        return `<div class="m-card">
+          <div class="m-card-top">
+            <div><div class="insp-eq">${a.equipment}</div><div class="insp-site">${a.type} · ${a.site}</div></div>
+            ${statusBadge(a)}
+          </div>
+          <div class="assignee" style="margin-bottom:6px"><div class="mini-avatar" style="background:${av.bg};color:${av.color}">${initials(inspectorName(a.assigneeId))}</div>${inspectorName(a.assigneeId)}</div>
+          <div class="recur-tag">Due ${a.dueDate} · <i class="ti ti-repeat"></i>${recurLabel(a.recurrence)}</div>
+          <div class="m-card-actions">
+            <div class="icon-btn" onclick="openEdit(${a.id})" style="flex:1"><i class="ti ti-edit"></i></div>
+            <div class="icon-btn danger" onclick="removeAssignment(${a.id})" style="flex:1"><i class="ti ti-trash"></i></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    `}
+    <div id="modalView"></div>
+  `;
+  renderModal();
+}
+
+function openAssign(){
+  editId = null;
+  formState = { equipment:"", type:EQUIPMENT_TYPES[0], site:SITES[0], assigneeId:INSPECTORS[0].id, dueDate:"2026-07-15", recurrence:"once", reminder:true };
+  modalOpen = true;
+  renderMain();
+}
+function openEdit(id){
+  const a = assignments.find(x=>x.id===id);
+  editId = id;
+  formState = { ...a };
+  modalOpen = true;
+  renderMain();
+}
+function closeModal(){
+  modalOpen = false;
+  renderMain();
+}
+function removeAssignment(id){
+  assignments = assignments.filter(a=>a.id!==id);
+  renderMain();
+}
+function setRecurrence(id){ formState.recurrence = id; renderModal(); }
+function toggleReminder(){ formState.reminder = !formState.reminder; renderModal(); }
+
+function saveAssignment(){
+  const equipment = document.getElementById("f_equipment").value.trim();
+  if(!equipment){ alert("Equipment ID is required."); return; }
+  formState.equipment = equipment;
+  formState.type = document.getElementById("f_type").value;
+  formState.site = document.getElementById("f_site").value;
+  formState.assigneeId = parseInt(document.getElementById("f_assignee").value);
+  formState.dueDate = document.getElementById("f_due").value;
+
+  if(editId){
+    const a = assignments.find(x=>x.id===editId);
+    Object.assign(a, formState, { status: a.status });
+  } else {
+    assignments.push({
+      id: Math.max(0,...assignments.map(a=>a.id))+1,
+      ...formState,
+      status: "upcoming",
+    });
+  }
+  modalOpen = false;
+  renderMain();
+}
+
+function renderModal(){
+  const mv = document.getElementById("modalView");
+  if(!mv) return;
+  if(!modalOpen){ mv.innerHTML = ""; return; }
+
+  mv.innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-head-icon"><i class="ti ti-calendar-plus"></i></div>
+        <div class="modal-title">${editId?'Edit inspection assignment':'Assign new inspection'}</div>
+        <div class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></div>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full"><div class="form-label">Equipment ID<span>*</span></div><input id="f_equipment" value="${formState.equipment||''}" placeholder="AED-014"/></div>
+          <div class="form-group"><div class="form-label">Equipment type</div>
+            <select id="f_type">${EQUIPMENT_TYPES.map(t=>`<option ${formState.type===t?'selected':''}>${t}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><div class="form-label">Site</div>
+            <select id="f_site">${SITES.map(s=>`<option ${formState.site===s?'selected':''}>${s}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><div class="form-label">Assign to</div>
+            <select id="f_assignee">${INSPECTORS.map(u=>`<option value="${u.id}" ${formState.assigneeId===u.id?'selected':''}>${u.name}</option>`).join('')}</select>
+          </div>
+          <div class="form-group"><div class="form-label">Due date</div><input id="f_due" type="date" value="${formState.dueDate||''}"/></div>
+        </div>
+
+        <div class="section-divider">Recurrence</div>
+        <div class="recur-options">
+          ${RECUR_OPTIONS.map(r=>`<div class="recur-opt ${formState.recurrence===r.id?'selected':''}" onclick="setRecurrence('${r.id}')">${r.label}</div>`).join('')}
+        </div>
+
+        <div class="section-divider">Email reminders</div>
+        <div class="reminder-row">
+          <div class="reminder-row-label">
+            <div class="reminder-row-title">Notify inspector by email</div>
+            <div class="reminder-row-desc">Reminder sent 2 days before the due date, and again if overdue.</div>
+          </div>
+          <div class="toggle ${formState.reminder?'on':''}" onclick="toggleReminder()"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" onclick="saveAssignment()">${editId?'Save changes':'Assign inspection'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+document.addEventListener("DOMContentLoaded", renderMain);
+</script>
+
+<script src="nav.js"></script>
+</body>
+</html>

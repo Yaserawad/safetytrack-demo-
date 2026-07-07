@@ -1,0 +1,148 @@
+/* ============================================
+   SafetyTrack — Shared Design Tokens & Base Styles
+   Include this file on EVERY page of the site.
+   <link rel="stylesheet" href="shared.css">
+   ============================================ */
+
+:root {
+  --navy: #003C6C;
+  --navy-dark: #002D52;
+  --gold: #FDB515;
+  --gold-light: #FEF3D6;
+  --ok: #2E7D32;
+  --ok-bg: #E8F5E9;
+  --warn: #B45309;
+  --warn-bg: #FEF3C7;
+  --bad: #B91C1C;
+  --bad-bg: #FEE2E2;
+
+  --surface-0: #F4F4F4;
+  --surface-1: #F8F8F8;
+  --surface-2: #FFFFFF;
+  --border: #E0E0E0;
+  --border-strong: #D0D0D0;
+
+  --text-primary: #111111;
+  --text-secondary: #666666;
+  --text-muted: #AAAAAA;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --nav-width: 220px;
+  --nav-height: 60px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--surface-0);
+  color: var(--text-primary);
+}
+
+/* ============ TOP BAR (mobile + all screens) ============ */
+.st-topbar {
+  height: var(--nav-height);
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.st-topbar-logo {
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.st-topbar-logo .dot { color: var(--gold); }
+.st-menu-btn {
+  display: none;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.12);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============ SIDEBAR (desktop) ============ */
+.st-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.st-sidebar {
+  width: var(--nav-width);
+  background: var(--navy);
+  flex-shrink: 0;
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.st-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  color: rgba(255,255,255,.7);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background .13s, color .13s;
+}
+.st-sidebar-link:hover {
+  background: rgba(255,255,255,.06);
+  color: #fff;
+}
+.st-sidebar-link.active {
+  background: rgba(255,255,255,.10);
+  color: #fff;
+  border-left-color: var(--gold);
+}
+.st-sidebar-link i { font-size: 16px; width: 18px; text-align: center; }
+
+.st-main {
+  flex: 1;
+  min-width: 0;
+  padding: 20px;
+}
+
+/* Mobile: collapse sidebar behind menu button */
+@media (max-width: 860px) {
+  .st-menu-btn { display: flex; }
+  .st-sidebar {
+    position: fixed;
+    left: -260px;
+    top: var(--nav-height);
+    height: calc(100vh - var(--nav-height));
+    width: 240px;
+    z-index: 99;
+    transition: left .18s ease;
+    box-shadow: 4px 0 16px rgba(0,0,0,.2);
+  }
+  .st-sidebar.open { left: 0; }
+  .st-main { padding: 14px; }
+  .st-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    top: var(--nav-height);
+    background: rgba(0,0,0,.35);
+    z-index: 98;
+  }
+  .st-overlay.open { display: block; }
+}
