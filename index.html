@@ -7,45 +7,190 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="shared.css">
 <style>
-  .dash-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 20px; }
-  @media (max-width: 700px) { .dash-stats { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-  .dash-stat { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px; }
-  .dash-stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-  .dash-stat-value { font-size: 26px; font-weight: 700; color: var(--navy); }
-  .dash-stat-value.warn { color: var(--warn); }
-  .dash-stat-value.bad { color: var(--bad); }
-  .dash-panel { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  .dash-panel h2 { font-size: 15px; color: var(--navy); margin: 0 0 12px; }
-  .dash-alert { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
-  .dash-alert:last-child { border-bottom: none; }
-  .dash-alert i { color: var(--bad); font-size: 18px; }
-  .placeholder-note { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 20px; }
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.dash-title{font-size:18px;font-weight:700;color:var(--navy)}
+.dash-sub{font-size:12px;color:var(--text-secondary)}
+.dash-cta{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none}
+.dash-cta:hover{background:var(--navy-dark)}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:700px){.stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:14px 16px}
+.stat-lbl{font-size:12px;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.stat-val{font-size:26px;font-weight:700;color:var(--navy)}
+.stat-val.ok{color:var(--ok)}
+.stat-val.warn{color:var(--warn)}
+.stat-val.bad{color:var(--bad)}
+
+.dash-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+@media (max-width:900px){.dash-grid{grid-template-columns:1fr}}
+.panel{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.panel-head h2{font-size:14px;color:var(--navy);margin:0}
+.panel-link{font-size:12px;color:var(--navy);text-decoration:none;font-weight:500}
+.panel-link:hover{text-decoration:underline}
+
+.alert-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.alert-row:last-child{border-bottom:none}
+.alert-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-icon.bad{background:var(--bad-bg);color:var(--bad)}
+.alert-icon.warn{background:var(--warn-bg);color:var(--warn)}
+.alert-main{flex:1}
+.alert-title{font-weight:600}
+.alert-sub{font-size:11px;color:var(--text-secondary);margin-top:1px}
+
+.activity-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.activity-row:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.activity-dot.ok{background:var(--ok)}
+.activity-dot.bad{background:var(--bad)}
+.activity-text strong{font-weight:600}
+.activity-time{font-size:10px;color:var(--text-muted);margin-top:1px}
+
+.site-mini{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.site-mini:last-child{border-bottom:none}
+.mini-bar-track{width:70px;height:6px;border-radius:4px;background:var(--surface-1);overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:4px}
+.mini-pct{font-size:11px;font-weight:600;width:32px;text-align:right}
+
+.quicklinks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:700px){.quicklinks{grid-template-columns:repeat(2,1fr)}}
+.qlink{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:0.5px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text-primary);font-size:12px;font-weight:500;text-align:center}
+.qlink:hover{background:var(--surface-1)}
+.qlink i{font-size:20px;color:var(--navy)}
 </style>
 </head>
 <body>
 
 <div id="page-content">
-  <div class="dash-stats">
-    <div class="dash-stat"><div class="dash-stat-label">Total equipment</div><div class="dash-stat-value">312</div></div>
-    <div class="dash-stat"><div class="dash-stat-label">Compliant</div><div class="dash-stat-value">278</div></div>
-    <div class="dash-stat"><div class="dash-stat-label">Due this week</div><div class="dash-stat-value warn">21</div></div>
-    <div class="dash-stat"><div class="dash-stat-label">Overdue</div><div class="dash-stat-value bad">13</div></div>
-  </div>
-
-  <div class="dash-panel">
-    <h2>Active alerts</h2>
-    <div class="dash-alert"><i class="ti ti-alert-triangle"></i> AED — McHenry Library, 2nd floor — inspection overdue 4 days</div>
-    <div class="dash-alert"><i class="ti ti-alert-triangle"></i> First Aid Kit — Kresge Town Hall — missing supplies flagged</div>
-    <div class="dash-alert"><i class="ti ti-alert-triangle"></i> Evacuation Chair — Science Hill, Bldg 3 — inspection overdue 2 days</div>
-  </div>
-
-  <p class="placeholder-note">
-    This is placeholder content to prove the shared nav + page pattern works end to end.
-    Replace everything inside #page-content with the real dashboard HTML from your
-    original chat artifact — the sidebar and top bar above are already wired in
-    automatically via nav.js, so you only need to paste content, nothing structural.
-  </p>
+  <div id="dashRoot"></div>
 </div>
+
+<script>
+const ALERTS = [
+  { severity:"bad", title:"AED-014 overdue", sub:"McHenry Library, 2nd floor — inspection overdue 1 day" },
+  { severity:"bad", title:"EVC-005 overdue", sub:"Science Hill Bldg 3, Stairwell B — inspection overdue 1 day" },
+  { severity:"bad", title:"EW-004 flagged", sub:"Baskin Engineering — weak flow, corrective action open" },
+  { severity:"warn", title:"FE-231 due soon", sub:"Porter College — inspection due in 3 days" },
+  { severity:"warn", title:"AED-033 due soon", sub:"Crown College — inspection due in 3 days" },
+];
+
+const ACTIVITY = [
+  { ok:true, text:"<strong>Maria Torres</strong> completed inspection on AED-021, Porter College", time:"Today, 9:14 AM" },
+  { ok:false, text:"<strong>Tom Nguyen</strong> flagged an issue on EW-004, Baskin Engineering", time:"Jun 27, 2:40 PM" },
+  { ok:true, text:"<strong>Jasmine Alvarez</strong> completed inspection on FE-118, Cowell College", time:"Jun 25, 11:02 AM" },
+  { ok:false, text:"<strong>Jasmine Alvarez</strong> flagged battery expiration on AED-014, McHenry Library", time:"Jun 8, 8:45 AM" },
+  { ok:true, text:"<strong>David Kim</strong> resolved finding on FE-231, Porter College", time:"May 22, 3:15 PM" },
+];
+
+const SITE_SUMMARY = [
+  { name:"Kresge Town Hall", pct:93 },
+  { name:"Cowell College", pct:96 },
+  { name:"Porter College", pct:94 },
+  { name:"McHenry Library", pct:85 },
+  { name:"Science Hill Bldg 3", pct:79 },
+  { name:"Baskin Engineering", pct:62 },
+];
+
+function barColor(pct){
+  if(pct>=90) return "#2E7D32";
+  if(pct>=75) return "#B45309";
+  return "#B91C1C";
+}
+
+function renderMain(){
+  const totalEquip = 186;
+  const compliant = 154;
+  const dueSoon = 19;
+  const overdue = 13;
+
+  document.getElementById("dashRoot").innerHTML = `
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">Welcome back</div>
+        <div class="dash-sub">UC Santa Cruz · ${new Date("2026-07-07").toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric', year:'numeric'})}</div>
+      </div>
+      <a class="dash-cta" href="inspections.html"><i class="ti ti-calendar-plus"></i> Assign inspection</a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-lbl"><i class="ti ti-fire-extinguisher"></i> Total equipment</div>
+        <div class="stat-val">${totalEquip}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl"><i class="ti ti-check"></i> Compliant</div>
+        <div class="stat-val ok">${compliant}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl"><i class="ti ti-clock"></i> Due this week</div>
+        <div class="stat-val warn">${dueSoon}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl"><i class="ti ti-alert-triangle"></i> Overdue</div>
+        <div class="stat-val bad">${overdue}</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h2>Active alerts</h2><a class="panel-link" href="findings.html">View all findings</a></div>
+          ${ALERTS.map(a=>`
+            <div class="alert-row">
+              <div class="alert-icon ${a.severity}"><i class="ti ti-${a.severity==='bad'?'alert-triangle':'clock'}"></i></div>
+              <div class="alert-main">
+                <div class="alert-title">${a.title}</div>
+                <div class="alert-sub">${a.sub}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Quick links</h2></div>
+          <div class="quicklinks">
+            <a class="qlink" href="map.html"><i class="ti ti-map-2"></i> Campus map</a>
+            <a class="qlink" href="equipment.html"><i class="ti ti-plus"></i> Add equipment</a>
+            <a class="qlink" href="inspect-form.html"><i class="ti ti-clipboard-check"></i> Log inspection</a>
+            <a class="qlink" href="reports.html"><i class="ti ti-file-type-pdf"></i> Generate report</a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h2>Recent activity</h2></div>
+          ${ACTIVITY.map(a=>`
+            <div class="activity-row">
+              <div class="activity-dot ${a.ok?'ok':'bad'}"></div>
+              <div>
+                <div class="activity-text">${a.text}</div>
+                <div class="activity-time">${a.time}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Compliance by site</h2><a class="panel-link" href="sites.html">View all</a></div>
+          ${SITE_SUMMARY.map(s=>`
+            <div class="site-mini">
+              <span>${s.name}</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${s.pct}%;background:${barColor(s.pct)}"></div></div>
+                <div class="mini-pct">${s.pct}%</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", renderMain);
+</script>
 
 <script src="nav.js"></script>
 </body>

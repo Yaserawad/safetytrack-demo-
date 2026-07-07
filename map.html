@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafetyTrack — Campus Map</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+.map-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.map-title{font-size:18px;font-weight:700;color:var(--navy);margin-right:auto}
+.search-row{display:flex;align-items:center;gap:6px;border:0.5px solid var(--border-strong);border-radius:8px;padding:8px 12px;background:var(--surface-2);width:280px;max-width:100%}
+.search-row i{color:var(--text-muted);font-size:14px}
+.search-row input{border:none;outline:none;font-size:13px;background:transparent;width:100%}
+.search-results{position:absolute;background:var(--surface-2);border:0.5px solid var(--border);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.12);width:280px;max-width:calc(100% - 32px);z-index:50;margin-top:44px;max-height:280px;overflow-y:auto}
+.search-result-item{padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:0.5px solid var(--border)}
+.search-result-item:last-child{border-bottom:none}
+.search-result-item:hover{background:var(--surface-1)}
+.search-result-eq{font-weight:600}
+.search-result-loc{color:var(--text-secondary);font-size:11px}
+
+.map-layout{display:flex;gap:16px;align-items:flex-start}
+@media (max-width:900px){.map-layout{flex-direction:column}}
+.map-panel{flex:1;background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:14px;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend-dot{width:9px;height:9px;border-radius:3px}
+
+.building{cursor:pointer;transition:opacity .12s}
+.building:hover{opacity:.85}
+.building-label{font-size:11px;font-weight:600;fill:#fff;pointer-events:none}
+.building-sub{font-size:8px;fill:rgba(255,255,255,.85);pointer-events:none}
+.building.selected{stroke:var(--gold);stroke-width:3}
+
+.side-panel{width:300px;flex-shrink:0;background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:16px}
+@media (max-width:900px){.side-panel{width:100%}}
+.side-empty{text-align:center;color:var(--text-muted);padding:30px 10px}
+.side-empty i{font-size:28px;margin-bottom:8px;display:block}
+.side-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.side-title{font-size:15px;font-weight:700;color:var(--navy)}
+.side-close{cursor:pointer;color:var(--text-muted)}
+.side-sub{font-size:11px;color:var(--text-secondary);margin-bottom:14px}
+.side-stats{display:flex;gap:8px;margin-bottom:14px}
+.side-stat{flex:1;background:var(--surface-1);border-radius:8px;padding:8px;text-align:center}
+.side-stat-val{font-size:16px;font-weight:700}
+.side-stat-lbl{font-size:9px;color:var(--text-secondary);text-transform:uppercase}
+.eq-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px}
+.eq-item:last-child{border-bottom:none}
+.eq-item-name{font-weight:600}
+.eq-item-type{font-size:10px;color:var(--text-secondary)}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.bad{background:var(--bad-bg);color:var(--bad)}
+.side-link{display:block;text-align:center;margin-top:12px;padding:8px;border-radius:8px;background:var(--navy);color:#fff;text-decoration:none;font-size:12px;font-weight:500}
+.side-link:hover{background:var(--navy-dark)}
+</style>
+</head>
+<body>
+
+<div id="page-content">
+  <div id="mapRoot"></div>
+</div>
+
+<script>
+const BUILDINGS = [
+  { id:"mchenry", name:"McHenry Library", x:40,  y:30,  w:150, h:90, compliant:22, total:26 },
+  { id:"kresge",  name:"Kresge Town Hall", x:210, y:30,  w:130, h:70, compliant:14, total:15 },
+  { id:"science", name:"Science Hill Bldg 3", x:360, y:30, w:150, h:90, compliant:19, total:24 },
+  { id:"porter",  name:"Porter College",  x:40,  y:140, w:150, h:80, compliant:31, total:33 },
+  { id:"cowell",  name:"Cowell College",  x:210, y:120, w:130, h:70, compliant:27, total:28 },
+  { id:"crown",   name:"Crown College",   x:210, y:210, w:130, h:70, compliant:16, total:19 },
+  { id:"baskin",  name:"Baskin Engineering", x:360, y:140, w:150, h:80, compliant:18, total:29 },
+  { id:"comms",   name:"Communications Building", x:40, y:240, w:150, h:70, compliant:11, total:12 },
+];
+
+const EQUIPMENT = [
+  { id:"AED-014", type:"AED", building:"mchenry", status:"overdue" },
+  { id:"FE-118", type:"Fire Extinguisher", building:"mchenry", status:"compliant" },
+  { id:"FAK-002", type:"First Aid Kit", building:"mchenry", status:"compliant" },
+  { id:"FAK-092", type:"First Aid Kit", building:"kresge", status:"compliant" },
+  { id:"FE-140", type:"Fire Extinguisher", building:"kresge", status:"compliant" },
+  { id:"EVC-005", type:"Evacuation Chair", building:"science", status:"overdue" },
+  { id:"FE-155", type:"Fire Extinguisher", building:"science", status:"compliant" },
+  { id:"AED-021", type:"AED", building:"porter", status:"compliant" },
+  { id:"FE-231", type:"Fire Extinguisher", building:"porter", status:"due-soon" },
+  { id:"FAK-071", type:"First Aid Kit", building:"porter", status:"compliant" },
+  { id:"FE-118B", type:"Fire Extinguisher", building:"cowell", status:"compliant" },
+  { id:"AED-040", type:"AED", building:"cowell", status:"compliant" },
+  { id:"AED-033", type:"AED", building:"crown", status:"due-soon" },
+  { id:"FAK-088", type:"First Aid Kit", building:"crown", status:"compliant" },
+  { id:"EW-004", type:"Eyewash Station", building:"baskin", status:"overdue" },
+  { id:"FE-201", type:"Fire Extinguisher", building:"baskin", status:"compliant" },
+  { id:"FAK-055", type:"First Aid Kit", building:"comms", status:"compliant" },
+];
+
+let selectedBuilding = null;
+let searchTerm = "";
+let searchOpen = false;
+
+function barColor(pct){
+  if(pct>=90) return "#2E7D32";
+  if(pct>=75) return "#B45309";
+  return "#B91C1C";
+}
+function statusBadge(s){
+  if(s==="compliant") return `<span class="badge ok"><i class="ti ti-check"></i>OK</span>`;
+  if(s==="due-soon") return `<span class="badge warn"><i class="ti ti-clock"></i>Due soon</span>`;
+  return `<span class="badge bad"><i class="ti ti-alert-triangle"></i>Overdue</span>`;
+}
+function selectBuilding(id){
+  selectedBuilding = id;
+  searchOpen = false;
+  renderMain();
+}
+function closeSidePanel(){
+  selectedBuilding = null;
+  renderMain();
+}
+function searchResults(){
+  if(!searchTerm.trim()) return [];
+  const t = searchTerm.toLowerCase();
+  return EQUIPMENT.filter(e => e.id.toLowerCase().includes(t) || e.type.toLowerCase().includes(t));
+}
+function jumpToResult(buildingId){
+  searchTerm = "";
+  searchOpen = false;
+  selectBuilding(buildingId);
+}
+
+function renderMain(){
+  const results = searchResults();
+
+  document.getElementById("mapRoot").innerHTML = `
+    <div class="map-header">
+      <div class="map-title">Campus Map</div>
+      <div style="position:relative">
+        <div class="search-row">
+          <i class="ti ti-search"></i>
+          <input placeholder="Search any equipment ID..." value="${searchTerm}"
+            oninput="searchTerm=this.value;searchOpen=true;renderMain()"
+            onfocus="searchOpen=true;renderMain()"/>
+        </div>
+        ${searchOpen && results.length>0 ? `
+        <div class="search-results">
+          ${results.map(r=>{
+            const b = BUILDINGS.find(b=>b.id===r.building);
+            return `<div class="search-result-item" onclick="jumpToResult('${r.building}')">
+              <div class="search-result-eq">${r.id} <span style="font-weight:400;color:var(--text-secondary)">· ${r.type}</span></div>
+              <div class="search-result-loc">${b.name}</div>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+      </div>
+    </div>
+
+    <div class="map-layout">
+      <div class="map-panel">
+        <div class="legend">
+          <span><div class="legend-dot" style="background:#2E7D32"></div>90%+ compliant</span>
+          <span><div class="legend-dot" style="background:#B45309"></div>75-89% compliant</span>
+          <span><div class="legend-dot" style="background:#B91C1C"></div>Below 75%</span>
+        </div>
+        <svg viewBox="0 0 550 330" style="width:100%;height:auto">
+          ${BUILDINGS.map(b=>{
+            const pct = Math.round(b.compliant/b.total*100);
+            const color = barColor(pct);
+            const sel = selectedBuilding===b.id ? 'selected' : '';
+            return `
+            <g class="building ${sel}" onclick="selectBuilding('${b.id}')">
+              <rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="10" fill="${color}"></rect>
+              <text x="${b.x+10}" y="${b.y+22}" class="building-label">${b.name}</text>
+              <text x="${b.x+10}" y="${b.y+38}" class="building-sub">${b.compliant}/${b.total} compliant (${pct}%)</text>
+            </g>`;
+          }).join('')}
+        </svg>
+      </div>
+
+      <div class="side-panel">
+        ${renderSidePanel()}
+      </div>
+    </div>
+  `;
+}
+
+function renderSidePanel(){
+  if(!selectedBuilding){
+    return `<div class="side-empty"><i class="ti ti-building"></i>Click a building on the map to see its equipment, or search for a specific unit above.</div>`;
+  }
+  const b = BUILDINGS.find(x=>x.id===selectedBuilding);
+  const items = EQUIPMENT.filter(e=>e.building===selectedBuilding);
+  const pct = Math.round(b.compliant/b.total*100);
+  const overdue = items.filter(i=>i.status==='overdue').length;
+
+  return `
+    <div class="side-head">
+      <div>
+        <div class="side-title">${b.name}</div>
+        <div class="side-sub">${b.total} pieces of equipment</div>
+      </div>
+      <div class="side-close" onclick="closeSidePanel()"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="side-stats">
+      <div class="side-stat"><div class="side-stat-val" style="color:${barColor(pct)}">${pct}%</div><div class="side-stat-lbl">Compliant</div></div>
+      <div class="side-stat"><div class="side-stat-val" style="color:var(--bad)">${overdue}</div><div class="side-stat-lbl">Overdue</div></div>
+    </div>
+    ${items.map(i=>`
+      <div class="eq-item">
+        <div><div class="eq-item-name">${i.id}</div><div class="eq-item-type">${i.type}</div></div>
+        ${statusBadge(i.status)}
+      </div>
+    `).join('')}
+    <a class="side-link" href="equipment.html">View full equipment list</a>
+  `;
+}
+
+document.addEventListener("click", (e) => {
+  if(!e.target.closest(".search-row") && !e.target.closest(".search-results")){
+    if(searchOpen){ searchOpen = false; renderMain(); }
+  }
+});
+
+document.addEventListener("DOMContentLoaded", renderMain);
+</script>
+
+<script src="nav.js"></script>
+</body>
+</html>
